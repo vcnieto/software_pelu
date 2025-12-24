@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -12,11 +13,13 @@ import {
   Menu,
   X,
   ChevronLeft,
+  UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Panel", href: "/", icon: LayoutDashboard },
+  { name: "Profesionales", href: "/profesionales", icon: UserCircle },
   { name: "Clientes", href: "/clientes", icon: Users },
   { name: "Servicios", href: "/servicios", icon: Scissors },
   { name: "Citas", href: "/citas", icon: CalendarDays },
@@ -32,6 +35,14 @@ const Sidebar = ({ children }: SidebarProps) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
+        .then(({ data }) => { if (data?.full_name) setProfileName(data.full_name); });
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,7 +125,7 @@ const Sidebar = ({ children }: SidebarProps) => {
         <div className="p-3 border-t border-sidebar-border space-y-2">
           {!collapsed && user && (
             <div className="px-3 py-2 text-sm text-muted-foreground truncate">
-              {user.email}
+              {profileName || user.email}
             </div>
           )}
           <Button
