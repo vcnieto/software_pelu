@@ -22,6 +22,7 @@ export type Database = {
           duration: number
           id: string
           notes: string | null
+          professional_id: string | null
           service_id: string | null
           start_time: string
           status: string | null
@@ -35,6 +36,7 @@ export type Database = {
           duration?: number
           id?: string
           notes?: string | null
+          professional_id?: string | null
           service_id?: string | null
           start_time: string
           status?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           duration?: number
           id?: string
           notes?: string | null
+          professional_id?: string | null
           service_id?: string | null
           start_time?: string
           status?: string | null
@@ -60,6 +63,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
           {
@@ -99,6 +109,33 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      professionals: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          specialty: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          specialty: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          specialty?: string
           updated_at?: string | null
           user_id?: string
         }

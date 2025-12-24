@@ -11,6 +11,7 @@ import Clients from "./pages/Clients";
 import Services from "./pages/Services";
 import Appointments from "./pages/Appointments";
 import CalendarView from "./pages/Calendar";
+import Professionals from "./pages/Professionals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<AuthRedirect />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/profesionales" element={<ProtectedRoute><Professionals /></ProtectedRoute>} />
             <Route path="/clientes" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
             <Route path="/servicios" element={<ProtectedRoute><Services /></ProtectedRoute>} />
             <Route path="/citas" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
