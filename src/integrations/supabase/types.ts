@@ -81,6 +81,65 @@ export type Database = {
           },
         ]
       }
+      cards: {
+        Row: {
+          allergies: string | null
+          card_type: Database["public"]["Enums"]["card_type"]
+          client_id: string
+          created_at: string
+          diseases: string | null
+          hair_type: string | null
+          id: string
+          medication: string | null
+          observations: string | null
+          product_batch: string | null
+          reactions: string | null
+          treated_zone: string | null
+          user_id: string
+          wax_type: string | null
+        }
+        Insert: {
+          allergies?: string | null
+          card_type: Database["public"]["Enums"]["card_type"]
+          client_id: string
+          created_at?: string
+          diseases?: string | null
+          hair_type?: string | null
+          id?: string
+          medication?: string | null
+          observations?: string | null
+          product_batch?: string | null
+          reactions?: string | null
+          treated_zone?: string | null
+          user_id: string
+          wax_type?: string | null
+        }
+        Update: {
+          allergies?: string | null
+          card_type?: Database["public"]["Enums"]["card_type"]
+          client_id?: string
+          created_at?: string
+          diseases?: string | null
+          hair_type?: string | null
+          id?: string
+          medication?: string | null
+          observations?: string | null
+          product_batch?: string | null
+          reactions?: string | null
+          treated_zone?: string | null
+          user_id?: string
+          wax_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cards_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string | null
@@ -206,7 +265,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      card_type: "health" | "waxing"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -333,6 +392,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      card_type: ["health", "waxing"],
+    },
   },
 } as const
