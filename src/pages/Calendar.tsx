@@ -127,32 +127,32 @@ const CalendarView = () => {
 
   return (
     <Sidebar>
-      <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
-        <div className="flex flex-col lg:flex-row gap-6">
+      <div className="p-4 lg:p-6 h-[calc(100vh-4rem)] flex flex-col animate-fade-in">
+        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
           {/* Left sidebar - Mini Calendar */}
-          <div className="lg:w-72 shrink-0">
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-4">
+          <div className="lg:w-64 shrink-0">
+            <Card className="p-3">
+              <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium text-sm">
                   {format(currentDate, "MMMM 'de' yyyy", { locale: es })}
                 </h3>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
-                    <ChevronLeft className="w-4 h-4" />
+                <div className="flex gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+                    <ChevronLeft className="w-3.5 h-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
-                    <ChevronRight className="w-4 h-4" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
               
-              <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map(day => (
-                  <div key={day} className="text-[10px] font-medium text-muted-foreground py-1">{day}</div>
+              <div className="grid grid-cols-7 gap-0.5 text-center mb-1.5">
+                {["L", "M", "X", "J", "V", "S", "D"].map(day => (
+                  <div key={day} className="text-[9px] font-medium text-muted-foreground py-0.5">{day}</div>
                 ))}
               </div>
               
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0.5">
                 {monthDays.slice(0, 42).map(day => {
                   const isCurrentMonth = isSameMonth(day, currentDate);
                   const isSelected = isSameDay(day, selectedDate);
@@ -163,7 +163,7 @@ const CalendarView = () => {
                       key={day.toISOString()}
                       onClick={() => handleDayClick(day)}
                       className={`
-                        text-xs p-1.5 rounded-md transition-colors relative
+                        text-[10px] p-1 rounded transition-colors relative
                         ${!isCurrentMonth ? "text-muted-foreground/40" : ""}
                         ${isSelected ? "bg-primary text-primary-foreground" : "hover:bg-muted"}
                         ${isToday(day) && !isSelected ? "border border-primary" : ""}
@@ -171,7 +171,7 @@ const CalendarView = () => {
                     >
                       {format(day, "d")}
                       {hasAppointments && !isSelected && (
-                        <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                       )}
                     </button>
                   );
@@ -181,28 +181,28 @@ const CalendarView = () => {
           </div>
 
           {/* Main Calendar Area */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex flex-col min-h-0">
             {/* Header with navigation and view toggles */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-                  <ChevronLeft className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(-1)}>
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => navigate(1)}>
-                  <ChevronRight className="w-5 h-5" />
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(1)}>
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
-                <h2 className="font-display text-xl font-semibold capitalize">
+                <h2 className="font-display text-lg font-semibold capitalize">
                   {view === "day" && format(currentDate, "d 'de' MMMM 'de' yyyy", { locale: es })}
                   {view === "week" && `${format(weekStart, "d", { locale: es })} – ${format(addDays(weekStart, 6), "d 'de' MMM yyyy", { locale: es })}`}
                   {(view === "month" || view === "list") && format(currentDate, "MMMM 'de' yyyy", { locale: es })}
                 </h2>
               </div>
               
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+              <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5">
                 <Button 
                   variant={view === "month" ? "default" : "ghost"} 
                   size="sm" 
-                  className="text-xs"
+                  className="text-xs h-7 px-3"
                   onClick={() => setView("month")}
                 >
                   Mes
@@ -210,7 +210,7 @@ const CalendarView = () => {
                 <Button 
                   variant={view === "week" ? "default" : "ghost"} 
                   size="sm"
-                  className="text-xs"
+                  className="text-xs h-7 px-3"
                   onClick={() => setView("week")}
                 >
                   Semana
@@ -218,7 +218,7 @@ const CalendarView = () => {
                 <Button 
                   variant={view === "day" ? "default" : "ghost"} 
                   size="sm"
-                  className="text-xs"
+                  className="text-xs h-7 px-3"
                   onClick={() => setView("day")}
                 >
                   Día
@@ -226,7 +226,7 @@ const CalendarView = () => {
                 <Button 
                   variant={view === "list" ? "default" : "ghost"} 
                   size="sm"
-                  className="text-xs"
+                  className="text-xs h-7 px-3"
                   onClick={() => setView("list")}
                 >
                   Lista
@@ -235,17 +235,17 @@ const CalendarView = () => {
             </div>
 
             {/* Calendar Views */}
-            <Card className="overflow-hidden">
-              <CardContent className="p-0">
+            <Card className="flex-1 overflow-hidden flex flex-col min-h-0">
+              <CardContent className="p-0 flex-1 overflow-hidden flex flex-col min-h-0">
                 {/* MONTH VIEW */}
                 {view === "month" && (
-                  <div>
+                  <div className="flex flex-col h-full">
                     <div className="grid grid-cols-7 border-b bg-muted/30">
                       {["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"].map(day => (
-                        <div key={day} className="p-3 text-center text-xs font-semibold text-muted-foreground">{day}</div>
+                        <div key={day} className="py-2 text-center text-xs font-semibold text-muted-foreground">{day}</div>
                       ))}
                     </div>
-                    <div className="grid grid-cols-7">
+                    <div className="grid grid-cols-7 flex-1 auto-rows-fr">
                       {monthDays.slice(0, 42).map((day, idx) => {
                         const dayAppts = getAppointmentsForDay(day);
                         const isCurrentMonth = isSameMonth(day, currentDate);
@@ -256,36 +256,36 @@ const CalendarView = () => {
                             key={day.toISOString()} 
                             onClick={() => handleDayClick(day)}
                             className={`
-                              min-h-[120px] p-2 border-b border-r cursor-pointer transition-colors hover:bg-muted/30
+                              p-1.5 border-b border-r cursor-pointer transition-colors hover:bg-muted/30 flex flex-col overflow-hidden
                               ${!isCurrentMonth ? "bg-muted/20" : ""}
                               ${idx % 7 === 0 ? "border-l-0" : ""}
                             `}
                           >
                             <p className={`
-                              text-sm font-medium mb-2
+                              text-xs font-medium mb-1 shrink-0
                               ${!isCurrentMonth ? "text-muted-foreground/40" : ""}
-                              ${isCurrentDay ? "w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center" : ""}
+                              ${isCurrentDay ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]" : ""}
                             `}>
                               {format(day, "d")}
                             </p>
-                            <div className="space-y-1">
-                              {dayAppts.slice(0, 3).map(apt => {
+                            <div className="space-y-0.5 overflow-hidden flex-1">
+                              {dayAppts.slice(0, 4).map(apt => {
                                 const color = getProfessionalColor(apt.professionals?.name);
                                 return (
                                   <div 
                                     key={apt.id} 
                                     onClick={(e) => { e.stopPropagation(); handleAppointmentClick(apt); }}
                                     className={`
-                                      text-[10px] px-2 py-1 rounded cursor-pointer truncate
-                                      ${color.bg} ${color.text} hover:opacity-80
+                                      text-[9px] leading-tight px-1.5 py-0.5 rounded cursor-pointer truncate
+                                      ${color.bg} ${color.text} hover:opacity-80 border-l-2 ${color.border}
                                     `}
                                   >
-                                    {apt.services?.name || apt.clients?.name}
+                                    <span className="font-medium">{apt.start_time.slice(0, 5)}</span> {apt.services?.name || apt.clients?.name}
                                   </div>
                                 );
                               })}
-                              {dayAppts.length > 3 && (
-                                <p className="text-[10px] text-muted-foreground px-1">+{dayAppts.length - 3} más</p>
+                              {dayAppts.length > 4 && (
+                                <p className="text-[9px] text-muted-foreground px-0.5">+{dayAppts.length - 4} más</p>
                               )}
                             </div>
                           </div>
@@ -297,183 +297,192 @@ const CalendarView = () => {
 
                 {/* WEEK VIEW */}
                 {view === "week" && (
-                  <div className="overflow-auto max-h-[600px]">
+                  <div className="flex flex-col h-full overflow-hidden">
                     {/* Week header */}
-                    <div className="grid grid-cols-8 border-b bg-muted/30 sticky top-0 z-10">
-                      <div className="p-2 text-xs font-medium text-muted-foreground border-r" />
+                    <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b bg-muted/30 shrink-0">
+                      <div className="py-2 text-xs font-medium text-muted-foreground border-r" />
                       {weekDays.map(day => (
-                        <div key={day.toISOString()} className="p-2 text-center border-r last:border-r-0">
+                        <div 
+                          key={day.toISOString()} 
+                          className={`py-2 text-center border-r last:border-r-0 ${isToday(day) ? 'bg-primary/10' : ''}`}
+                        >
                           <p className="text-[10px] text-muted-foreground uppercase">
-                            {format(day, "EEE", { locale: es })} {format(day, "d/MM")}
+                            {format(day, "EEE", { locale: es })}
+                          </p>
+                          <p className={`text-sm font-semibold ${isToday(day) ? 'text-primary' : ''}`}>
+                            {format(day, "d")}
                           </p>
                         </div>
                       ))}
                     </div>
                     
-                    {/* All day row */}
-                    <div className="grid grid-cols-8 border-b">
-                      <div className="p-2 text-[10px] text-muted-foreground border-r">All-Day</div>
-                      {weekDays.map(day => (
-                        <div key={day.toISOString()} className="p-1 border-r last:border-r-0 min-h-[30px]" />
+                    {/* Hours grid - scrollable */}
+                    <div className="flex-1 overflow-auto">
+                      {hours.map(hour => (
+                        <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] border-b last:border-b-0">
+                          <div className="py-1 px-2 text-[10px] text-muted-foreground border-r text-right">
+                            {String(hour).padStart(2, '0')}:00
+                          </div>
+                          {weekDays.map(day => {
+                            const dayAppts = getAppointmentsForDay(day);
+                            const hourAppts = dayAppts.filter(a => {
+                              const startHour = parseInt(a.start_time.split(":")[0]);
+                              return startHour === hour;
+                            });
+                            
+                            return (
+                              <div 
+                                key={day.toISOString()} 
+                                className={`p-0.5 border-r last:border-r-0 h-16 relative ${isToday(day) ? 'bg-primary/5' : ''}`}
+                              >
+                                {hourAppts.map(apt => {
+                                  const color = getProfessionalColor(apt.professionals?.name);
+                                  const heightPx = Math.max((apt.duration / 60) * 64, 28);
+                                  
+                                  return (
+                                    <div 
+                                      key={apt.id}
+                                      onClick={() => handleAppointmentClick(apt)}
+                                      style={{ height: `${heightPx}px` }}
+                                      className={`
+                                        absolute left-0.5 right-0.5 p-1 rounded cursor-pointer overflow-hidden z-10
+                                        ${color.bg} ${color.text} border-l-2 ${color.border} hover:opacity-90 transition-opacity
+                                      `}
+                                    >
+                                      <p className="text-[9px] font-semibold leading-none">
+                                        {apt.start_time.slice(0, 5)}
+                                      </p>
+                                      <p className="text-[9px] truncate leading-tight mt-0.5">{apt.services?.name}</p>
+                                      <p className="text-[8px] truncate opacity-75">{apt.clients?.name}</p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                        </div>
                       ))}
                     </div>
-                    
-                    {/* Hours grid */}
-                    {hours.map(hour => (
-                      <div key={hour} className="grid grid-cols-8 border-b last:border-b-0">
-                        <div className="p-2 text-[10px] text-muted-foreground border-r text-right pr-3">
-                          {hour}
-                        </div>
-                        {weekDays.map(day => {
-                          const dayAppts = getAppointmentsForDay(day);
-                          const hourAppts = dayAppts.filter(a => {
-                            const startHour = parseInt(a.start_time.split(":")[0]);
-                            return startHour === hour;
-                          });
-                          
-                          return (
-                            <div key={day.toISOString()} className="p-0.5 border-r last:border-r-0 min-h-[50px] relative">
-                              {hourAppts.map(apt => {
-                                const color = getProfessionalColor(apt.professionals?.name);
-                                const durationRows = Math.ceil(apt.duration / 60);
-                                
-                                return (
-                                  <div 
-                                    key={apt.id}
-                                    onClick={() => handleAppointmentClick(apt)}
-                                    style={{ height: `${durationRows * 50 - 4}px` }}
-                                    className={`
-                                      absolute left-0.5 right-0.5 p-1.5 rounded cursor-pointer overflow-hidden
-                                      ${color.bg} ${color.text} border-l-2 ${color.border}
-                                    `}
-                                  >
-                                    <p className="text-[10px] font-medium">
-                                      {apt.start_time.slice(0, 5)} - {getEndTime(apt.start_time, apt.duration)}
-                                    </p>
-                                    <p className="text-[10px] truncate">{apt.services?.name}</p>
-                                    <p className="text-[9px] truncate opacity-75">{apt.clients?.name}</p>
-                                    {apt.professionals && (
-                                      <p className="text-[9px] truncate opacity-75">Prof: {apt.professionals.name}</p>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
                   </div>
                 )}
 
                 {/* DAY VIEW */}
                 {view === "day" && (
-                  <div className="overflow-auto max-h-[600px]">
+                  <div className="flex flex-col h-full overflow-hidden">
                     {/* Day header */}
-                    <div className="border-b bg-muted/30 p-3 sticky top-0 z-10">
-                      <p className="text-xs text-muted-foreground uppercase text-center">
-                        {format(currentDate, "EEEE", { locale: es }).toUpperCase()}
+                    <div className="border-b bg-muted/30 py-3 px-4 shrink-0">
+                      <p className="text-sm font-semibold text-center">
+                        {format(currentDate, "EEEE", { locale: es })}
+                      </p>
+                      <p className={`text-2xl font-bold text-center ${isToday(currentDate) ? 'text-primary' : ''}`}>
+                        {format(currentDate, "d")}
                       </p>
                     </div>
                     
-                    {/* All day row */}
-                    <div className="grid grid-cols-[80px_1fr] border-b">
-                      <div className="p-2 text-[10px] text-muted-foreground border-r">All-Day</div>
-                      <div className="p-1 min-h-[30px]" />
-                    </div>
-                    
-                    {/* Hours grid */}
-                    {hours.map(hour => {
-                      const dayAppts = getAppointmentsForDay(currentDate);
-                      const hourAppts = dayAppts.filter(a => {
-                        const startHour = parseInt(a.start_time.split(":")[0]);
-                        return startHour === hour;
-                      });
-                      
-                      return (
-                        <div key={hour} className="grid grid-cols-[80px_1fr] border-b last:border-b-0">
-                          <div className="p-2 text-[10px] text-muted-foreground border-r text-right pr-3">
-                            {hour}
-                          </div>
-                          <div className="p-0.5 min-h-[50px] relative">
-                            {hourAppts.map(apt => {
-                              const color = getProfessionalColor(apt.professionals?.name);
-                              const durationRows = Math.ceil(apt.duration / 60);
-                              
-                              return (
-                                <div 
-                                  key={apt.id}
-                                  onClick={() => handleAppointmentClick(apt)}
-                                  style={{ height: `${durationRows * 50 - 4}px` }}
-                                  className={`
-                                    absolute left-0.5 right-0.5 p-2 rounded cursor-pointer overflow-hidden
-                                    ${color.bg} ${color.text} border-l-2 ${color.border}
-                                  `}
-                                >
-                                  <p className="text-xs font-medium">
-                                    {apt.start_time.slice(0, 5)} - {getEndTime(apt.start_time, apt.duration)}
-                                  </p>
-                                  <p className="text-xs truncate font-medium">{apt.services?.name}</p>
-                                  <p className="text-xs truncate">Cliente: {apt.clients?.name}</p>
-                                  {apt.professionals && (
-                                    <p className="text-xs truncate">Profesional: {apt.professionals.name}</p>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* LIST VIEW */}
-                {view === "list" && (
-                  <div className="divide-y">
-                    {Object.keys(groupedAppointments).length === 0 ? (
-                      <div className="p-8 text-center text-muted-foreground">
-                        <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>No hay citas programadas para este período</p>
-                      </div>
-                    ) : (
-                      Object.entries(groupedAppointments)
-                        .sort(([a], [b]) => a.localeCompare(b))
-                        .map(([date, appts]) => (
-                          <div key={date} className="py-4 px-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <h3 className="font-semibold text-sm uppercase">
-                                {format(new Date(date + "T00:00:00"), "d 'DE' MMMM 'DE' yyyy", { locale: es }).toUpperCase()}
-                              </h3>
-                              <span className="text-sm text-muted-foreground uppercase">
-                                {getWeekdayName(date)}
-                              </span>
+                    {/* Hours grid - scrollable */}
+                    <div className="flex-1 overflow-auto">
+                      {hours.map(hour => {
+                        const dayAppts = getAppointmentsForDay(currentDate);
+                        const hourAppts = dayAppts.filter(a => {
+                          const startHour = parseInt(a.start_time.split(":")[0]);
+                          return startHour === hour;
+                        });
+                        
+                        return (
+                          <div key={hour} className="grid grid-cols-[80px_1fr] border-b last:border-b-0">
+                            <div className="py-2 px-3 text-xs text-muted-foreground border-r text-right font-medium">
+                              {String(hour).padStart(2, '0')}:00
                             </div>
-                            <div className="space-y-2">
-                              {appts.map(apt => {
+                            <div className="p-1 h-20 relative">
+                              {hourAppts.map(apt => {
                                 const color = getProfessionalColor(apt.professionals?.name);
+                                const heightPx = Math.max((apt.duration / 60) * 80, 36);
+                                
                                 return (
                                   <div 
                                     key={apt.id}
                                     onClick={() => handleAppointmentClick(apt)}
-                                    className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors border"
+                                    style={{ height: `${heightPx}px` }}
+                                    className={`
+                                      absolute left-1 right-1 p-2 rounded-lg cursor-pointer overflow-hidden
+                                      ${color.bg} ${color.text} border-l-3 ${color.border} hover:opacity-90 transition-opacity shadow-sm
+                                    `}
                                   >
-                                    <div className="text-sm text-muted-foreground whitespace-nowrap">
-                                      {apt.start_time.slice(0, 5)} - {getEndTime(apt.start_time, apt.duration)}
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-xs font-semibold">
+                                        {apt.start_time.slice(0, 5)} - {getEndTime(apt.start_time, apt.duration)}
+                                      </p>
                                     </div>
-                                    <div className={`w-2 h-2 rounded-full ${color.bg.replace('/20', '')} ${color.border.replace('border-', 'bg-')}`} />
-                                    <div className="flex-1 min-w-0">
-                                      <span className="text-sm">
-                                        {apt.services?.name} - {apt.clients?.name}
-                                        {apt.professionals && ` (${apt.professionals.name})`}
-                                      </span>
-                                    </div>
+                                    <p className="text-sm font-medium truncate mt-0.5">{apt.services?.name}</p>
+                                    <p className="text-xs truncate opacity-80">Cliente: {apt.clients?.name}</p>
+                                    {apt.professionals && (
+                                      <p className="text-xs truncate opacity-80">Prof: {apt.professionals.name}</p>
+                                    )}
                                   </div>
                                 );
                               })}
                             </div>
                           </div>
-                        ))
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* LIST VIEW */}
+                {view === "list" && (
+                  <div className="flex-1 overflow-auto">
+                    {Object.keys(groupedAppointments).length === 0 ? (
+                      <div className="p-12 text-center text-muted-foreground">
+                        <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg">No hay citas programadas para este período</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y">
+                        {Object.entries(groupedAppointments)
+                          .sort(([a], [b]) => a.localeCompare(b))
+                          .map(([date, appts]) => (
+                            <div key={date} className="py-4 px-5">
+                              <div className="flex items-center justify-between mb-3 pb-2 border-b border-dashed">
+                                <h3 className="font-semibold text-sm">
+                                  {format(new Date(date + "T00:00:00"), "EEEE, d 'de' MMMM", { locale: es })}
+                                </h3>
+                                <span className="text-xs bg-muted px-2 py-1 rounded-full">
+                                  {appts.length} {appts.length === 1 ? 'cita' : 'citas'}
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {appts.map(apt => {
+                                  const color = getProfessionalColor(apt.professionals?.name);
+                                  return (
+                                    <div 
+                                      key={apt.id}
+                                      onClick={() => handleAppointmentClick(apt)}
+                                      className={`
+                                        flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-all
+                                        ${color.bg} hover:opacity-80 border-l-3 ${color.border}
+                                      `}
+                                    >
+                                      <div className="text-sm font-medium whitespace-nowrap min-w-[100px]">
+                                        {apt.start_time.slice(0, 5)} - {getEndTime(apt.start_time, apt.duration)}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className={`text-sm font-medium ${color.text}`}>{apt.services?.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {apt.clients?.name} {apt.professionals && `• ${apt.professionals.name}`}
+                                        </p>
+                                      </div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {apt.duration} min
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))
+                        }
+                      </div>
                     )}
                   </div>
                 )}
