@@ -4,11 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Heart, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, FileText, Heart, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -39,6 +40,7 @@ const ClientCards = ({ clientId, clientName }: ClientCardsProps) => {
   const [open, setOpen] = useState(false);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [cardType, setCardType] = useState<"health" | "waxing">("health");
+  const [editingCard, setEditingCard] = useState<ClientCard | null>(null);
   const [form, setForm] = useState({
     diseases: "",
     allergies: "",
@@ -77,6 +79,7 @@ const ClientCards = ({ clientId, clientName }: ClientCardsProps) => {
       observations: "",
     });
     setCardType("health");
+    setEditingCard(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,16 +100,51 @@ const ClientCards = ({ clientId, clientName }: ClientCardsProps) => {
       observations: form.observations || null,
     };
 
-    const { error } = await supabase.from("cards").insert(cardData);
-    
-    if (error) {
-      toast.error("Error al crear la ficha");
-      return;
+    if (editingCard) {
+      const { error } = await supabase.from("cards").update(cardData).eq("id", editingCard.id);
+      if (error) {
+        toast.error("Error al actualizar la ficha");
+        return;
+      }
+      toast.success("Ficha actualizada correctamente");
+    } else {
+      const { error } = await supabase.from("cards").insert(cardData);
+      if (error) {
+        toast.error("Error al crear la ficha");
+        return;
+      }
+      toast.success("Ficha creada correctamente");
     }
     
-    toast.success("Ficha creada correctamente");
     setOpen(false);
     resetForm();
+    fetchCards();
+  };
+
+  const handleEdit = (card: ClientCard) => {
+    setEditingCard(card);
+    setCardType(card.card_type);
+    setForm({
+      diseases: card.diseases || "",
+      allergies: card.allergies || "",
+      medication: card.medication || "",
+      treated_zone: card.treated_zone || "",
+      hair_type: card.hair_type || "",
+      wax_type: card.wax_type || "",
+      product_batch: card.product_batch || "",
+      reactions: card.reactions || "",
+      observations: card.observations || "",
+    });
+    setOpen(true);
+  };
+
+  const handleDelete = async (cardId: string) => {
+    const { error } = await supabase.from("cards").delete().eq("id", cardId);
+    if (error) {
+      toast.error("Error al eliminar la ficha");
+      return;
+    }
+    toast.success("Ficha eliminada correctamente");
     fetchCards();
   };
 
@@ -142,12 +180,18 @@ const ClientCards = ({ clientId, clientName }: ClientCardsProps) => {
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Nueva Ficha para {clientName}</DialogTitle>
+              <DialogTitle>
+                {editingCard ? "Editar Ficha" : `Nueva Ficha para ${clientName}`}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label>Tipo de ficha *</Label>
-                <Select value={cardType} onValueChange={(v: "health" | "waxing") => setCardType(v)}>
+                <Select 
+                  value={cardType} 
+                  onValueChange={(v: "health" | "waxing") => setCardType(v)}
+                  disabled={!!editingCard}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -252,7 +296,7 @@ const ClientCards = ({ clientId, clientName }: ClientCardsProps) => {
               </div>
 
               <Button type="submit" className="w-full">
-                Guardar Ficha
+                {editingCard ? "Guardar Cambios" : "Guardar Ficha"}
               </Button>
             </form>
           </DialogContent>
@@ -267,12 +311,12 @@ const ClientCards = ({ clientId, clientName }: ClientCardsProps) => {
         <div className="space-y-3">
           {cards.map((card) => (
             <Card key={card.id} className="overflow-hidden">
-              <CardHeader
-                className="py-3 px-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => toggleExpand(card.id)}
-              >
+              <CardHeader className="py-3 px-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div 
+                    className="flex items-center gap-3 flex-1 cursor-pointer"
+                    onClick={() => toggleExpand(card.id)}
+                  >
                     {getCardIcon(card.card_type)}
                     <div>
                       <CardTitle className="text-sm font-medium">
@@ -283,11 +327,47 @@ const ClientCards = ({ clientId, clientName }: ClientCardsProps) => {
                       </p>
                     </div>
                   </div>
-                  {expandedCard === card.id ? (
-                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  )}
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(card)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Eliminar ficha?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta acción no se puede deshacer. La ficha será eliminada permanentemente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDelete(card.id)} 
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Eliminar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => toggleExpand(card.id)}
+                    >
+                      {expandedCard === card.id ? (
+                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               
