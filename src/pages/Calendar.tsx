@@ -18,18 +18,10 @@ interface Appointment {
   status: string;
   clients: { name: string } | null;
   services: { name: string; duration: number; price: number } | null;
-  professionals: { name: string; specialty: string } | null;
+  professionals: { name: string; specialty: string; color?: string } | null;
 }
 
-// Colors for professionals - using theme-compatible colors
-const PROFESSIONAL_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  "Llarina": { bg: "bg-blue-500/20", border: "border-blue-500", text: "text-blue-700 dark:text-blue-300" },
-  "Yarina": { bg: "bg-blue-500/20", border: "border-blue-500", text: "text-blue-700 dark:text-blue-300" },
-  "Pili": { bg: "bg-red-500/20", border: "border-red-500", text: "text-red-700 dark:text-red-300" },
-  "Paula": { bg: "bg-green-500/20", border: "border-green-500", text: "text-green-700 dark:text-green-300" },
-};
-
-const DEFAULT_COLOR = { bg: "bg-primary/20", border: "border-primary", text: "text-primary" };
+const DEFAULT_COLOR = "#8B5CF6";
 
 const CalendarView = () => {
   const { user } = useAuth();
@@ -69,7 +61,7 @@ const CalendarView = () => {
     }
     const { data } = await supabase
       .from("appointments")
-      .select("*, clients(name), services(name, duration, price), professionals(name, specialty)")
+      .select("*, clients(name), services(name, duration, price), professionals(name, specialty, color)")
       .gte("date", start)
       .lte("date", end)
       .order("date")
@@ -77,9 +69,8 @@ const CalendarView = () => {
     setAppointments(data || []);
   };
 
-  const getProfessionalColor = (professionalName: string | undefined) => {
-    if (!professionalName) return DEFAULT_COLOR;
-    return PROFESSIONAL_COLORS[professionalName] || DEFAULT_COLOR;
+  const getProfessionalColor = (professional: { color?: string } | null) => {
+    return professional?.color || DEFAULT_COLOR;
   };
 
   const getAppointmentsForDay = (date: Date) => 
@@ -269,16 +260,18 @@ const CalendarView = () => {
                               {format(day, "d")}
                             </p>
                             <div className="space-y-0.5 overflow-hidden flex-1">
-                              {dayAppts.slice(0, 4).map(apt => {
-                                const color = getProfessionalColor(apt.professionals?.name);
+                            {dayAppts.slice(0, 4).map(apt => {
+                                const color = getProfessionalColor(apt.professionals);
                                 return (
                                   <div 
                                     key={apt.id} 
                                     onClick={(e) => { e.stopPropagation(); handleAppointmentClick(apt); }}
-                                    className={`
-                                      text-[9px] leading-tight px-1.5 py-0.5 rounded cursor-pointer truncate
-                                      ${color.bg} ${color.text} hover:opacity-80 border-l-2 ${color.border}
-                                    `}
+                                    className="text-[9px] leading-tight px-1.5 py-0.5 rounded cursor-pointer truncate hover:opacity-80 border-l-2"
+                                    style={{ 
+                                      backgroundColor: color + "20", 
+                                      borderColor: color,
+                                      color: color
+                                    }}
                                   >
                                     <span className="font-medium">{apt.start_time.slice(0, 5)}</span> {apt.services?.name || apt.clients?.name}
                                   </div>
@@ -336,18 +329,20 @@ const CalendarView = () => {
                                 className={`p-0.5 border-r last:border-r-0 h-16 relative ${isToday(day) ? 'bg-primary/5' : ''}`}
                               >
                                 {hourAppts.map(apt => {
-                                  const color = getProfessionalColor(apt.professionals?.name);
+                                  const color = getProfessionalColor(apt.professionals);
                                   const heightPx = Math.max((apt.duration / 60) * 64, 28);
                                   
                                   return (
                                     <div 
                                       key={apt.id}
                                       onClick={() => handleAppointmentClick(apt)}
-                                      style={{ height: `${heightPx}px` }}
-                                      className={`
-                                        absolute left-0.5 right-0.5 p-1 rounded cursor-pointer overflow-hidden z-10
-                                        ${color.bg} ${color.text} border-l-2 ${color.border} hover:opacity-90 transition-opacity
-                                      `}
+                                      style={{ 
+                                        height: `${heightPx}px`,
+                                        backgroundColor: color + "20",
+                                        borderColor: color,
+                                        color: color
+                                      }}
+                                      className="absolute left-0.5 right-0.5 p-1 rounded cursor-pointer overflow-hidden z-10 border-l-2 hover:opacity-90 transition-opacity"
                                     >
                                       <p className="text-[9px] font-semibold leading-none">
                                         {apt.start_time.slice(0, 5)}
@@ -395,18 +390,20 @@ const CalendarView = () => {
                             </div>
                             <div className="p-1 h-20 relative">
                               {hourAppts.map(apt => {
-                                const color = getProfessionalColor(apt.professionals?.name);
+                                const color = getProfessionalColor(apt.professionals);
                                 const heightPx = Math.max((apt.duration / 60) * 80, 36);
                                 
                                 return (
                                   <div 
                                     key={apt.id}
                                     onClick={() => handleAppointmentClick(apt)}
-                                    style={{ height: `${heightPx}px` }}
-                                    className={`
-                                      absolute left-1 right-1 p-2 rounded-lg cursor-pointer overflow-hidden
-                                      ${color.bg} ${color.text} border-l-3 ${color.border} hover:opacity-90 transition-opacity shadow-sm
-                                    `}
+                                    style={{ 
+                                      height: `${heightPx}px`,
+                                      backgroundColor: color + "20",
+                                      borderColor: color,
+                                      color: color
+                                    }}
+                                    className="absolute left-1 right-1 p-2 rounded-lg cursor-pointer overflow-hidden border-l-[3px] hover:opacity-90 transition-opacity shadow-sm"
                                   >
                                     <div className="flex items-center gap-2">
                                       <p className="text-xs font-semibold">
@@ -453,21 +450,22 @@ const CalendarView = () => {
                               </div>
                               <div className="space-y-2">
                                 {appts.map(apt => {
-                                  const color = getProfessionalColor(apt.professionals?.name);
+                                  const color = getProfessionalColor(apt.professionals);
                                   return (
                                     <div 
                                       key={apt.id}
                                       onClick={() => handleAppointmentClick(apt)}
-                                      className={`
-                                        flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-all
-                                        ${color.bg} hover:opacity-80 border-l-3 ${color.border}
-                                      `}
+                                      style={{ 
+                                        backgroundColor: color + "20",
+                                        borderColor: color
+                                      }}
+                                      className="flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-all hover:opacity-80 border-l-[3px]"
                                     >
                                       <div className="text-sm font-medium whitespace-nowrap min-w-[100px]">
                                         {apt.start_time.slice(0, 5)} - {getEndTime(apt.start_time, apt.duration)}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <p className={`text-sm font-medium ${color.text}`}>{apt.services?.name}</p>
+                                        <p className="text-sm font-medium" style={{ color }}>{apt.services?.name}</p>
                                         <p className="text-xs text-muted-foreground">
                                           {apt.clients?.name} {apt.professionals && `• ${apt.professionals.name}`}
                                         </p>

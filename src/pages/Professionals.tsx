@@ -7,15 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, UserCircle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Pencil, Trash2, UserCircle, Palette } from "lucide-react";
 import { toast } from "sonner";
+
+const PRESET_COLORS = [
+  "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", 
+  "#EC4899", "#6366F1", "#14B8A6", "#F97316", "#84CC16"
+];
 
 const Professionals = () => {
   const { user } = useAuth();
   const [professionals, setProfessionals] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: "", specialty: "" });
+  const [form, setForm] = useState({ name: "", specialty: "", color: "#8B5CF6" });
 
   useEffect(() => { if (user) fetchProfessionals(); }, [user]);
 
@@ -35,7 +41,7 @@ const Professionals = () => {
       if (error) { toast.error("Error al crear"); return; }
       toast.success("Profesional creado");
     }
-    setOpen(false); setEditing(null); setForm({ name: "", specialty: "" }); fetchProfessionals();
+    setOpen(false); setEditing(null); setForm({ name: "", specialty: "", color: "#8B5CF6" }); fetchProfessionals();
   };
 
   const handleDelete = async (id: string) => {
@@ -51,13 +57,37 @@ const Professionals = () => {
       <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-3xl font-display font-semibold">Profesionales</h1>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm({ name: "", specialty: "" }); } }}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm({ name: "", specialty: "", color: "#8B5CF6" }); } }}>
             <DialogTrigger asChild><Button className="btn-primary-gradient gap-2"><Plus className="w-4 h-4" />Nuevo Profesional</Button></DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} Profesional</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div><Label>Nombre *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required /></div>
                 <div><Label>Especialidad *</Label><Input value={form.specialty} onChange={e => setForm({...form, specialty: e.target.value})} placeholder="ej: Peluquería, Estética" required /></div>
+                <div>
+                  <Label>Color identificativo</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start gap-2 mt-1">
+                        <div className="w-5 h-5 rounded-full border" style={{ backgroundColor: form.color }} />
+                        <span>{form.color}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3">
+                      <div className="grid grid-cols-5 gap-2">
+                        {PRESET_COLORS.map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => setForm({...form, color})}
+                            className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${form.color === color ? 'border-foreground ring-2 ring-primary' : 'border-transparent'}`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Button type="submit" className="w-full btn-primary-gradient">{editing ? "Guardar" : "Crear"}</Button>
               </form>
             </DialogContent>
@@ -69,8 +99,11 @@ const Professionals = () => {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <UserCircle className="w-6 h-6 text-primary" />
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: (pro.color || "#8B5CF6") + "20" }}
+                    >
+                      <UserCircle className="w-6 h-6" style={{ color: pro.color || "#8B5CF6" }} />
                     </div>
                     <div>
                       <p className="font-display font-semibold text-lg">{pro.name}</p>
@@ -78,7 +111,7 @@ const Professionals = () => {
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => { setEditing(pro); setForm({ name: pro.name, specialty: pro.specialty }); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => { setEditing(pro); setForm({ name: pro.name, specialty: pro.specialty, color: pro.color || "#8B5CF6" }); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(pro.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </div>
                 </div>
