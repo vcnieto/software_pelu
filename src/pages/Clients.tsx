@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Plus, Pencil, Trash2, Phone, Mail, Search, User, FileText } from "lucide-react";
 import { toast } from "sonner";
 import ClientCards from "@/components/clients/ClientCards";
+import BodyTreatmentCards from "@/components/clients/BodyTreatmentCards";
 
 interface Client {
   id: string;
@@ -287,11 +288,18 @@ const Clients = () => {
                 )}
 
                 {/* Cards Section */}
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t space-y-6">
                   <ClientCards
                     clientId={selectedClient.id}
                     clientName={selectedClient.name}
                   />
+                  
+                  <div className="pt-4 border-t">
+                    <BodyTreatmentCards
+                      clientId={selectedClient.id}
+                      clientName={selectedClient.name}
+                    />
+                  </div>
                 </div>
               </div>
             </>

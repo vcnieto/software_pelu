@@ -81,6 +81,120 @@ export type Database = {
           },
         ]
       }
+      body_treatment_cards: {
+        Row: {
+          age: number | null
+          cellulite_type: string | null
+          client_id: string
+          created_at: string
+          date: string
+          equipment_used: string | null
+          final_observations: string | null
+          flaccidity: string | null
+          fluid_retention: string | null
+          gel_lotion: string | null
+          general_observations: string | null
+          id: string
+          localized_fat: boolean | null
+          muscle_tonicity: string | null
+          oils_creams: string | null
+          other_products: string | null
+          professional_id: string | null
+          professional_registration: string | null
+          session_number: number | null
+          skin_alterations: string[] | null
+          skin_alterations_other: string | null
+          skin_sensitivity: string | null
+          skin_type: string | null
+          skin_type_other: string | null
+          treated_zones: string | null
+          treatment_performed: string | null
+          treatment_reactions: string[] | null
+          treatment_reactions_other: string | null
+          treatment_time: string | null
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          cellulite_type?: string | null
+          client_id: string
+          created_at?: string
+          date?: string
+          equipment_used?: string | null
+          final_observations?: string | null
+          flaccidity?: string | null
+          fluid_retention?: string | null
+          gel_lotion?: string | null
+          general_observations?: string | null
+          id?: string
+          localized_fat?: boolean | null
+          muscle_tonicity?: string | null
+          oils_creams?: string | null
+          other_products?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_alterations?: string[] | null
+          skin_alterations_other?: string | null
+          skin_sensitivity?: string | null
+          skin_type?: string | null
+          skin_type_other?: string | null
+          treated_zones?: string | null
+          treatment_performed?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          treatment_time?: string | null
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          cellulite_type?: string | null
+          client_id?: string
+          created_at?: string
+          date?: string
+          equipment_used?: string | null
+          final_observations?: string | null
+          flaccidity?: string | null
+          fluid_retention?: string | null
+          gel_lotion?: string | null
+          general_observations?: string | null
+          id?: string
+          localized_fat?: boolean | null
+          muscle_tonicity?: string | null
+          oils_creams?: string | null
+          other_products?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_alterations?: string[] | null
+          skin_alterations_other?: string | null
+          skin_sensitivity?: string | null
+          skin_type?: string | null
+          skin_type_other?: string | null
+          treated_zones?: string | null
+          treatment_performed?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          treatment_time?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "body_treatment_cards_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "body_treatment_cards_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cards: {
         Row: {
           allergies: string | null
