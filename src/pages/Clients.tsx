@@ -13,6 +13,7 @@ import { Plus, Pencil, Trash2, Phone, Mail, Search, User, FileText } from "lucid
 import { toast } from "sonner";
 import ClientCards from "@/components/clients/ClientCards";
 import BodyTreatmentCards from "@/components/clients/BodyTreatmentCards";
+import FacialSkinCards from "@/components/clients/FacialSkinCards";
 
 interface Client {
   id: string;
@@ -296,6 +297,13 @@ const Clients = () => {
                   
                   <div className="pt-4 border-t">
                     <BodyTreatmentCards
+                      clientId={selectedClient.id}
+                      clientName={selectedClient.name}
+                    />
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <FacialSkinCards
                       clientId={selectedClient.id}
                       clientName={selectedClient.name}
                     />

@@ -287,6 +287,156 @@ export type Database = {
         }
         Relationships: []
       }
+      facial_skin_cards: {
+        Row: {
+          age: number | null
+          bags_dark_circles: string | null
+          cleanser: string | null
+          client_id: string
+          created_at: string
+          daily_cleansing: string | null
+          date: string
+          equipment_used: string | null
+          final_observations: string | null
+          general_observations: string | null
+          has_milia: boolean | null
+          home_other_products: string | null
+          home_sunscreen: string | null
+          hydration: string | null
+          id: string
+          lips: string | null
+          lips_other: string | null
+          moisturizer: string | null
+          other_products: string | null
+          professional_id: string | null
+          professional_recommendations: string | null
+          professional_registration: string | null
+          routine_observations: string | null
+          sensitivity: string | null
+          serum: string | null
+          session_number: number | null
+          skin_condition: string | null
+          skin_condition_other: string | null
+          skin_conditions: string[] | null
+          skin_conditions_other: string | null
+          skin_type: string | null
+          special_treatments: string | null
+          sunscreen: string | null
+          texture: string | null
+          texture_other: string | null
+          toner: string | null
+          treatment_performed: string | null
+          treatment_reactions: string[] | null
+          treatment_reactions_other: string | null
+          user_id: string
+          visible_pores: string | null
+          wrinkles: string | null
+        }
+        Insert: {
+          age?: number | null
+          bags_dark_circles?: string | null
+          cleanser?: string | null
+          client_id: string
+          created_at?: string
+          daily_cleansing?: string | null
+          date?: string
+          equipment_used?: string | null
+          final_observations?: string | null
+          general_observations?: string | null
+          has_milia?: boolean | null
+          home_other_products?: string | null
+          home_sunscreen?: string | null
+          hydration?: string | null
+          id?: string
+          lips?: string | null
+          lips_other?: string | null
+          moisturizer?: string | null
+          other_products?: string | null
+          professional_id?: string | null
+          professional_recommendations?: string | null
+          professional_registration?: string | null
+          routine_observations?: string | null
+          sensitivity?: string | null
+          serum?: string | null
+          session_number?: number | null
+          skin_condition?: string | null
+          skin_condition_other?: string | null
+          skin_conditions?: string[] | null
+          skin_conditions_other?: string | null
+          skin_type?: string | null
+          special_treatments?: string | null
+          sunscreen?: string | null
+          texture?: string | null
+          texture_other?: string | null
+          toner?: string | null
+          treatment_performed?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id: string
+          visible_pores?: string | null
+          wrinkles?: string | null
+        }
+        Update: {
+          age?: number | null
+          bags_dark_circles?: string | null
+          cleanser?: string | null
+          client_id?: string
+          created_at?: string
+          daily_cleansing?: string | null
+          date?: string
+          equipment_used?: string | null
+          final_observations?: string | null
+          general_observations?: string | null
+          has_milia?: boolean | null
+          home_other_products?: string | null
+          home_sunscreen?: string | null
+          hydration?: string | null
+          id?: string
+          lips?: string | null
+          lips_other?: string | null
+          moisturizer?: string | null
+          other_products?: string | null
+          professional_id?: string | null
+          professional_recommendations?: string | null
+          professional_registration?: string | null
+          routine_observations?: string | null
+          sensitivity?: string | null
+          serum?: string | null
+          session_number?: number | null
+          skin_condition?: string | null
+          skin_condition_other?: string | null
+          skin_conditions?: string[] | null
+          skin_conditions_other?: string | null
+          skin_type?: string | null
+          special_treatments?: string | null
+          sunscreen?: string | null
+          texture?: string | null
+          texture_other?: string | null
+          toner?: string | null
+          treatment_performed?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id?: string
+          visible_pores?: string | null
+          wrinkles?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facial_skin_cards_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facial_skin_cards_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professionals: {
         Row: {
           color: string | null
