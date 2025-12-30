@@ -157,11 +157,14 @@ const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsPr
   }, [clientId]);
 
   const fetchCards = async () => {
-    const { data } = await supabase
-      .from("aesthetic_history_cards")
+    const { data, error } = await (supabase
+      .from("aesthetic_history_cards" as any)
       .select("*")
       .eq("client_id", clientId)
-      .order("date", { ascending: false });
+      .order("date", { ascending: false }) as any);
+    if (error) {
+      console.error("Error fetching aesthetic history cards:", error);
+    }
     setCards((data as AestheticHistoryCard[]) || []);
   };
 
@@ -227,14 +230,14 @@ const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsPr
     };
 
     if (editingCard) {
-      const { error } = await supabase.from("aesthetic_history_cards").update(cardData).eq("id", editingCard.id);
+      const { error } = await (supabase.from("aesthetic_history_cards" as any).update(cardData).eq("id", editingCard.id) as any);
       if (error) {
         toast.error("Error al actualizar la ficha");
         return;
       }
       toast.success("Ficha actualizada correctamente");
     } else {
-      const { error } = await supabase.from("aesthetic_history_cards").insert(cardData);
+      const { error } = await (supabase.from("aesthetic_history_cards" as any).insert(cardData) as any);
       if (error) {
         toast.error("Error al crear la ficha");
         return;
@@ -303,7 +306,7 @@ const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsPr
   };
 
   const handleDelete = async (cardId: string) => {
-    const { error } = await supabase.from("aesthetic_history_cards").delete().eq("id", cardId);
+    const { error } = await (supabase.from("aesthetic_history_cards" as any).delete().eq("id", cardId) as any);
     if (error) {
       toast.error("Error al eliminar la ficha");
       return;

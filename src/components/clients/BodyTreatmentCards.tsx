@@ -117,11 +117,12 @@ const BodyTreatmentCards = ({ clientId, clientName }: BodyTreatmentCardsProps) =
   }, [clientId]);
 
   const fetchCards = async () => {
-    const { data } = await supabase
-      .from("body_treatment_cards")
+    const { data, error } = await (supabase
+      .from("body_treatment_cards" as any)
       .select("*")
       .eq("client_id", clientId)
-      .order("date", { ascending: false });
+      .order("date", { ascending: false }) as any);
+    if (error) console.error("Error fetching body treatment cards:", error);
     setCards((data as BodyTreatmentCard[]) || []);
   };
 
@@ -197,14 +198,14 @@ const BodyTreatmentCards = ({ clientId, clientName }: BodyTreatmentCardsProps) =
     };
 
     if (editingCard) {
-      const { error } = await supabase.from("body_treatment_cards").update(cardData).eq("id", editingCard.id);
+      const { error } = await (supabase.from("body_treatment_cards" as any).update(cardData).eq("id", editingCard.id) as any);
       if (error) {
         toast.error("Error al actualizar la ficha");
         return;
       }
       toast.success("Ficha actualizada correctamente");
     } else {
-      const { error } = await supabase.from("body_treatment_cards").insert(cardData);
+      const { error } = await (supabase.from("body_treatment_cards" as any).insert(cardData) as any);
       if (error) {
         toast.error("Error al crear la ficha");
         return;
@@ -251,7 +252,7 @@ const BodyTreatmentCards = ({ clientId, clientName }: BodyTreatmentCardsProps) =
   };
 
   const handleDelete = async (cardId: string) => {
-    const { error } = await supabase.from("body_treatment_cards").delete().eq("id", cardId);
+    const { error } = await (supabase.from("body_treatment_cards" as any).delete().eq("id", cardId) as any);
     if (error) {
       toast.error("Error al eliminar la ficha");
       return;
