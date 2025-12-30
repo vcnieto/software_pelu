@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import ClientCards from "@/components/clients/ClientCards";
 import BodyTreatmentCards from "@/components/clients/BodyTreatmentCards";
 import FacialSkinCards from "@/components/clients/FacialSkinCards";
+import AestheticHistoryCards from "@/components/clients/AestheticHistoryCards";
 
 interface Client {
   id: string;
@@ -290,10 +291,17 @@ const Clients = () => {
 
                 {/* Cards Section */}
                 <div className="pt-4 border-t space-y-6">
-                  <ClientCards
+                  <AestheticHistoryCards
                     clientId={selectedClient.id}
                     clientName={selectedClient.name}
                   />
+                  
+                  <div className="pt-4 border-t">
+                    <ClientCards
+                      clientId={selectedClient.id}
+                      clientName={selectedClient.name}
+                    />
+                  </div>
                   
                   <div className="pt-4 border-t">
                     <BodyTreatmentCards

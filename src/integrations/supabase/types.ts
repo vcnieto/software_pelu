@@ -14,6 +14,179 @@ export type Database = {
   }
   public: {
     Tables: {
+      aesthetic_history_cards: {
+        Row: {
+          age: number | null
+          alcohol_consumption: string | null
+          allergies: string | null
+          birth_date: string | null
+          chronic_diseases: string | null
+          client_id: string
+          client_signature: string | null
+          created_at: string
+          current_past_diseases: string | null
+          daily_water_consumption: string | null
+          date: string
+          diet: string[] | null
+          diuresis: string | null
+          email: string | null
+          emotional_observations: string | null
+          emotional_state: string | null
+          family_history: string | null
+          has_prosthesis: boolean | null
+          hormonal_treatments: string | null
+          id: string
+          intestinal_habit: string | null
+          is_breastfeeding: boolean | null
+          is_pregnant: boolean | null
+          main_interest_area: string | null
+          main_interest_area_other: string | null
+          menopause: boolean | null
+          menopause_age: number | null
+          phone: string | null
+          phototype: string | null
+          physical_activity: string | null
+          pregnancies_count: number | null
+          previous_aesthetic_treatments: string | null
+          previous_pregnancies: boolean | null
+          previous_surgeries: string | null
+          previous_treatment_reactions: string | null
+          profession: string | null
+          professional_observations: string | null
+          professional_signature: string | null
+          prosthesis_type: string | null
+          regular_medication: string | null
+          regular_menstrual_cycle: boolean | null
+          sensitivities_contraindications: string | null
+          signature_date: string | null
+          skin_alterations: string[] | null
+          skin_alterations_other: string | null
+          skin_type: string | null
+          sleep_hours: string | null
+          smokes: boolean | null
+          smoking_quantity: string | null
+          specific_objectives: string | null
+          stress_level: string | null
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          alcohol_consumption?: string | null
+          allergies?: string | null
+          birth_date?: string | null
+          chronic_diseases?: string | null
+          client_id: string
+          client_signature?: string | null
+          created_at?: string
+          current_past_diseases?: string | null
+          daily_water_consumption?: string | null
+          date?: string
+          diet?: string[] | null
+          diuresis?: string | null
+          email?: string | null
+          emotional_observations?: string | null
+          emotional_state?: string | null
+          family_history?: string | null
+          has_prosthesis?: boolean | null
+          hormonal_treatments?: string | null
+          id?: string
+          intestinal_habit?: string | null
+          is_breastfeeding?: boolean | null
+          is_pregnant?: boolean | null
+          main_interest_area?: string | null
+          main_interest_area_other?: string | null
+          menopause?: boolean | null
+          menopause_age?: number | null
+          phone?: string | null
+          phototype?: string | null
+          physical_activity?: string | null
+          pregnancies_count?: number | null
+          previous_aesthetic_treatments?: string | null
+          previous_pregnancies?: boolean | null
+          previous_surgeries?: string | null
+          previous_treatment_reactions?: string | null
+          profession?: string | null
+          professional_observations?: string | null
+          professional_signature?: string | null
+          prosthesis_type?: string | null
+          regular_medication?: string | null
+          regular_menstrual_cycle?: boolean | null
+          sensitivities_contraindications?: string | null
+          signature_date?: string | null
+          skin_alterations?: string[] | null
+          skin_alterations_other?: string | null
+          skin_type?: string | null
+          sleep_hours?: string | null
+          smokes?: boolean | null
+          smoking_quantity?: string | null
+          specific_objectives?: string | null
+          stress_level?: string | null
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          alcohol_consumption?: string | null
+          allergies?: string | null
+          birth_date?: string | null
+          chronic_diseases?: string | null
+          client_id?: string
+          client_signature?: string | null
+          created_at?: string
+          current_past_diseases?: string | null
+          daily_water_consumption?: string | null
+          date?: string
+          diet?: string[] | null
+          diuresis?: string | null
+          email?: string | null
+          emotional_observations?: string | null
+          emotional_state?: string | null
+          family_history?: string | null
+          has_prosthesis?: boolean | null
+          hormonal_treatments?: string | null
+          id?: string
+          intestinal_habit?: string | null
+          is_breastfeeding?: boolean | null
+          is_pregnant?: boolean | null
+          main_interest_area?: string | null
+          main_interest_area_other?: string | null
+          menopause?: boolean | null
+          menopause_age?: number | null
+          phone?: string | null
+          phototype?: string | null
+          physical_activity?: string | null
+          pregnancies_count?: number | null
+          previous_aesthetic_treatments?: string | null
+          previous_pregnancies?: boolean | null
+          previous_surgeries?: string | null
+          previous_treatment_reactions?: string | null
+          profession?: string | null
+          professional_observations?: string | null
+          professional_signature?: string | null
+          prosthesis_type?: string | null
+          regular_medication?: string | null
+          regular_menstrual_cycle?: boolean | null
+          sensitivities_contraindications?: string | null
+          signature_date?: string | null
+          skin_alterations?: string[] | null
+          skin_alterations_other?: string | null
+          skin_type?: string | null
+          sleep_hours?: string | null
+          smokes?: boolean | null
+          smoking_quantity?: string | null
+          specific_objectives?: string | null
+          stress_level?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aesthetic_history_cards_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           client_id: string
