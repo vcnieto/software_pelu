@@ -15,6 +15,7 @@ import ClientCards from "@/components/clients/ClientCards";
 import BodyTreatmentCards from "@/components/clients/BodyTreatmentCards";
 import FacialSkinCards from "@/components/clients/FacialSkinCards";
 import AestheticHistoryCards from "@/components/clients/AestheticHistoryCards";
+import { MassageDlmCards } from "@/components/clients/MassageDlmCards";
 
 interface Client {
   id: string;
@@ -315,6 +316,10 @@ const Clients = () => {
                       clientId={selectedClient.id}
                       clientName={selectedClient.name}
                     />
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <MassageDlmCards clientId={selectedClient.id} />
                   </div>
                 </div>
               </div>
