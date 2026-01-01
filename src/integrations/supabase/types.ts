@@ -460,6 +460,141 @@ export type Database = {
         }
         Relationships: []
       }
+      eyelash_eyebrow_cards: {
+        Row: {
+          additional_observations: string | null
+          age: number | null
+          avoid_wet_rub: string | null
+          avoid_wet_rub_other: string | null
+          client_id: string
+          created_at: string
+          date: string
+          exposure_time: string | null
+          external_treatments: string | null
+          eye_disease_details: string | null
+          eye_eyelid_state: string | null
+          eye_eyelid_state_other: string | null
+          eyebrow_hair_color: string | null
+          eyebrow_shape: string | null
+          eyebrow_shape_other: string | null
+          eyebrow_tint: string | null
+          eyelash_hair_color: string | null
+          eyelash_tint: string | null
+          general_observations: string | null
+          has_eye_diseases: boolean | null
+          id: string
+          lash_brow_length: string | null
+          lash_brow_thickness: string | null
+          mold_size: string | null
+          mold_type: string | null
+          other_products: string | null
+          perm_type: string | null
+          professional_id: string | null
+          professional_registration: string | null
+          session_number: number | null
+          skin_type: string | null
+          skin_type_other: string | null
+          specific_products: string | null
+          treatment_performed: string | null
+          treatment_reactions: string[] | null
+          treatment_reactions_other: string | null
+          user_id: string
+        }
+        Insert: {
+          additional_observations?: string | null
+          age?: number | null
+          avoid_wet_rub?: string | null
+          avoid_wet_rub_other?: string | null
+          client_id: string
+          created_at?: string
+          date?: string
+          exposure_time?: string | null
+          external_treatments?: string | null
+          eye_disease_details?: string | null
+          eye_eyelid_state?: string | null
+          eye_eyelid_state_other?: string | null
+          eyebrow_hair_color?: string | null
+          eyebrow_shape?: string | null
+          eyebrow_shape_other?: string | null
+          eyebrow_tint?: string | null
+          eyelash_hair_color?: string | null
+          eyelash_tint?: string | null
+          general_observations?: string | null
+          has_eye_diseases?: boolean | null
+          id?: string
+          lash_brow_length?: string | null
+          lash_brow_thickness?: string | null
+          mold_size?: string | null
+          mold_type?: string | null
+          other_products?: string | null
+          perm_type?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_type?: string | null
+          skin_type_other?: string | null
+          specific_products?: string | null
+          treatment_performed?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id: string
+        }
+        Update: {
+          additional_observations?: string | null
+          age?: number | null
+          avoid_wet_rub?: string | null
+          avoid_wet_rub_other?: string | null
+          client_id?: string
+          created_at?: string
+          date?: string
+          exposure_time?: string | null
+          external_treatments?: string | null
+          eye_disease_details?: string | null
+          eye_eyelid_state?: string | null
+          eye_eyelid_state_other?: string | null
+          eyebrow_hair_color?: string | null
+          eyebrow_shape?: string | null
+          eyebrow_shape_other?: string | null
+          eyebrow_tint?: string | null
+          eyelash_hair_color?: string | null
+          eyelash_tint?: string | null
+          general_observations?: string | null
+          has_eye_diseases?: boolean | null
+          id?: string
+          lash_brow_length?: string | null
+          lash_brow_thickness?: string | null
+          mold_size?: string | null
+          mold_type?: string | null
+          other_products?: string | null
+          perm_type?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_type?: string | null
+          skin_type_other?: string | null
+          specific_products?: string | null
+          treatment_performed?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eyelash_eyebrow_cards_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eyelash_eyebrow_cards_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facial_skin_cards: {
         Row: {
           age: number | null
