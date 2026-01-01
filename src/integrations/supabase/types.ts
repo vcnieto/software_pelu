@@ -610,6 +610,93 @@ export type Database = {
           },
         ]
       }
+      massage_dlm_cards: {
+        Row: {
+          age: number | null
+          client_id: string
+          created_at: string
+          date: string
+          dlm_time: string | null
+          final_observations: string | null
+          gel_lotion: string | null
+          general_observations: string | null
+          id: string
+          massage_time: string | null
+          oils_creams: string | null
+          other_products: string | null
+          professional_id: string | null
+          professional_registration: string | null
+          session_number: number | null
+          skin_alterations: string[] | null
+          skin_alterations_other: string | null
+          skin_sensitivity: string | null
+          skin_type: string | null
+          skin_type_other: string | null
+          treated_zones: string | null
+          treatment_reactions: string[] | null
+          treatment_reactions_other: string | null
+          user_id: string
+          uses_dlm: boolean | null
+          uses_massage: boolean | null
+        }
+        Insert: {
+          age?: number | null
+          client_id: string
+          created_at?: string
+          date?: string
+          dlm_time?: string | null
+          final_observations?: string | null
+          gel_lotion?: string | null
+          general_observations?: string | null
+          id?: string
+          massage_time?: string | null
+          oils_creams?: string | null
+          other_products?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_alterations?: string[] | null
+          skin_alterations_other?: string | null
+          skin_sensitivity?: string | null
+          skin_type?: string | null
+          skin_type_other?: string | null
+          treated_zones?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id: string
+          uses_dlm?: boolean | null
+          uses_massage?: boolean | null
+        }
+        Update: {
+          age?: number | null
+          client_id?: string
+          created_at?: string
+          date?: string
+          dlm_time?: string | null
+          final_observations?: string | null
+          gel_lotion?: string | null
+          general_observations?: string | null
+          id?: string
+          massage_time?: string | null
+          oils_creams?: string | null
+          other_products?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_alterations?: string[] | null
+          skin_alterations_other?: string | null
+          skin_sensitivity?: string | null
+          skin_type?: string | null
+          skin_type_other?: string | null
+          treated_zones?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id?: string
+          uses_dlm?: boolean | null
+          uses_massage?: boolean | null
+        }
+        Relationships: []
+      }
       professionals: {
         Row: {
           color: string | null
