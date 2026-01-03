@@ -745,6 +745,152 @@ export type Database = {
           },
         ]
       }
+      hair_scalp_cards: {
+        Row: {
+          client_id: string
+          control_hair_loss: boolean | null
+          created_at: string
+          current_color: string | null
+          date: string
+          email: string | null
+          exposure_time: string | null
+          hair_density: string | null
+          hair_elasticity: string | null
+          hair_porosity: string | null
+          hair_texture: string | null
+          hair_type: string | null
+          hair_type_other: string | null
+          heat_tools: string[] | null
+          heat_tools_other: string | null
+          hydration_nutrition: boolean | null
+          id: string
+          improve_hair_health: boolean | null
+          mask_treatment: string | null
+          natural_color: string | null
+          oils_serums: string | null
+          other_objective: string | null
+          other_products: string | null
+          phone: string | null
+          previous_treatments: string[] | null
+          previous_treatments_other: string | null
+          product_sensitivity: string | null
+          professional_observations: string | null
+          restoration_repair: boolean | null
+          scalp_observations: string | null
+          scalp_problems: string[] | null
+          scalp_problems_other: string | null
+          scalp_type: string | null
+          scalp_type_other: string | null
+          session_time: string | null
+          shampoo_conditioner: string | null
+          supplements_treatments: string | null
+          treated_zones: string | null
+          treatment_service: string | null
+          user_id: string
+          usual_products: string | null
+          wash_frequency: string | null
+          wash_frequency_other: string | null
+        }
+        Insert: {
+          client_id: string
+          control_hair_loss?: boolean | null
+          created_at?: string
+          current_color?: string | null
+          date?: string
+          email?: string | null
+          exposure_time?: string | null
+          hair_density?: string | null
+          hair_elasticity?: string | null
+          hair_porosity?: string | null
+          hair_texture?: string | null
+          hair_type?: string | null
+          hair_type_other?: string | null
+          heat_tools?: string[] | null
+          heat_tools_other?: string | null
+          hydration_nutrition?: boolean | null
+          id?: string
+          improve_hair_health?: boolean | null
+          mask_treatment?: string | null
+          natural_color?: string | null
+          oils_serums?: string | null
+          other_objective?: string | null
+          other_products?: string | null
+          phone?: string | null
+          previous_treatments?: string[] | null
+          previous_treatments_other?: string | null
+          product_sensitivity?: string | null
+          professional_observations?: string | null
+          restoration_repair?: boolean | null
+          scalp_observations?: string | null
+          scalp_problems?: string[] | null
+          scalp_problems_other?: string | null
+          scalp_type?: string | null
+          scalp_type_other?: string | null
+          session_time?: string | null
+          shampoo_conditioner?: string | null
+          supplements_treatments?: string | null
+          treated_zones?: string | null
+          treatment_service?: string | null
+          user_id: string
+          usual_products?: string | null
+          wash_frequency?: string | null
+          wash_frequency_other?: string | null
+        }
+        Update: {
+          client_id?: string
+          control_hair_loss?: boolean | null
+          created_at?: string
+          current_color?: string | null
+          date?: string
+          email?: string | null
+          exposure_time?: string | null
+          hair_density?: string | null
+          hair_elasticity?: string | null
+          hair_porosity?: string | null
+          hair_texture?: string | null
+          hair_type?: string | null
+          hair_type_other?: string | null
+          heat_tools?: string[] | null
+          heat_tools_other?: string | null
+          hydration_nutrition?: boolean | null
+          id?: string
+          improve_hair_health?: boolean | null
+          mask_treatment?: string | null
+          natural_color?: string | null
+          oils_serums?: string | null
+          other_objective?: string | null
+          other_products?: string | null
+          phone?: string | null
+          previous_treatments?: string[] | null
+          previous_treatments_other?: string | null
+          product_sensitivity?: string | null
+          professional_observations?: string | null
+          restoration_repair?: boolean | null
+          scalp_observations?: string | null
+          scalp_problems?: string[] | null
+          scalp_problems_other?: string | null
+          scalp_type?: string | null
+          scalp_type_other?: string | null
+          session_time?: string | null
+          shampoo_conditioner?: string | null
+          supplements_treatments?: string | null
+          treated_zones?: string | null
+          treatment_service?: string | null
+          user_id?: string
+          usual_products?: string | null
+          wash_frequency?: string | null
+          wash_frequency_other?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hair_scalp_cards_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       massage_dlm_cards: {
         Row: {
           age: number | null
