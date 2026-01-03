@@ -60,6 +60,8 @@ interface HairScalpCard {
 
 interface HairScalpCardsProps {
   clientId: string;
+  clientPhone?: string | null;
+  clientEmail?: string | null;
 }
 
 const HAIR_TYPES = ["Liso", "Ondulado", "Rizado", "Muy rizado", "Otro"];
@@ -74,10 +76,10 @@ const SENSITIVITIES = ["Baja", "Media", "Alta"];
 const WASH_FREQUENCIES = ["Diario", "Cada 2 días", "Semanal", "Otro"];
 const HEAT_TOOLS = ["Planchas", "Secador", "Tenacillas", "Otro"];
 
-const emptyForm = {
+const createEmptyForm = (clientPhone?: string | null, clientEmail?: string | null) => ({
   date: new Date().toISOString().split("T")[0],
-  phone: "",
-  email: "",
+  phone: clientPhone || "",
+  email: clientEmail || "",
   hair_type: "",
   hair_type_other: "",
   hair_texture: "",
@@ -114,14 +116,14 @@ const emptyForm = {
   restoration_repair: false,
   other_objective: "",
   professional_observations: "",
-};
+});
 
-export function HairScalpCards({ clientId }: HairScalpCardsProps) {
+export function HairScalpCards({ clientId, clientPhone, clientEmail }: HairScalpCardsProps) {
   const { user } = useAuth();
   const [cards, setCards] = useState<HairScalpCard[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<HairScalpCard | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(createEmptyForm(clientPhone, clientEmail));
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -194,7 +196,7 @@ export function HairScalpCards({ clientId }: HairScalpCardsProps) {
 
     setOpen(false);
     setEditing(null);
-    setForm(emptyForm);
+    setForm(createEmptyForm(clientPhone, clientEmail));
     fetchCards();
   };
 
@@ -265,8 +267,8 @@ export function HairScalpCards({ clientId }: HairScalpCardsProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <FileText className="w-4 h-4" />
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <FileText className="w-5 h-5 text-indigo-500" />
           Fichas de Cabello y Cuero Cabelludo
         </h3>
         <Dialog
@@ -275,14 +277,14 @@ export function HairScalpCards({ clientId }: HairScalpCardsProps) {
             setOpen(v);
             if (!v) {
               setEditing(null);
-              setForm(emptyForm);
+              setForm(createEmptyForm(clientPhone, clientEmail));
             }
           }}
         >
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1">
+            <Button size="sm" className="gap-2">
               <Plus className="w-4 h-4" />
-              Nueva
+              Nueva Ficha
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -707,7 +709,9 @@ export function HairScalpCards({ clientId }: HairScalpCardsProps) {
       {/* Cards list */}
       <div className="space-y-3">
         {cards.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No hay fichas de cabello</p>
+          <p className="text-muted-foreground text-sm py-4 text-center">
+            No hay fichas de cabello para este cliente
+          </p>
         ) : (
           cards.map((card) => (
             <Card key={card.id} className="card-hover">

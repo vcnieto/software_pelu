@@ -180,13 +180,13 @@ export function MassageDlmCards({ clientId }: MassageDlmCardsProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          <HandHeart className="h-5 w-5" />
+          <HandHeart className="h-5 w-5 text-emerald-500" />
           Fichas de Masaje y DLM
         </h3>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={openNewDialog}>
-              <Plus className="h-4 w-4 mr-1" />
+            <Button size="sm" className="gap-2" onClick={openNewDialog}>
+              <Plus className="h-4 w-4" />
               Nueva Ficha
             </Button>
           </DialogTrigger>
@@ -459,7 +459,9 @@ export function MassageDlmCards({ clientId }: MassageDlmCardsProps) {
       </div>
 
       {cards.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No hay fichas de masaje/DLM registradas.</p>
+        <p className="text-muted-foreground text-sm py-4 text-center">
+          No hay fichas de masaje/DLM para este cliente
+        </p>
       ) : (
         <div className="space-y-3">
           {cards.map((card) => (

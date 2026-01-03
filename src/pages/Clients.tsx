@@ -9,9 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, Pencil, Trash2, Phone, Mail, Search, User, FileText } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Plus, Pencil, Trash2, Phone, Mail, Search, User, FileText, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import ClientCards from "@/components/clients/ClientCards";
 import BodyTreatmentCards from "@/components/clients/BodyTreatmentCards";
 import FacialSkinCards from "@/components/clients/FacialSkinCards";
 import AestheticHistoryCards from "@/components/clients/AestheticHistoryCards";
@@ -19,6 +23,8 @@ import { MassageDlmCards } from "@/components/clients/MassageDlmCards";
 import { EyelashEyebrowCards } from "@/components/clients/EyelashEyebrowCards";
 import { WaxingTreatmentCards } from "@/components/clients/WaxingTreatmentCards";
 import { HairScalpCards } from "@/components/clients/HairScalpCards";
+import VisagismCards from "@/components/clients/VisagismCards";
+import MakeupProfessionalCards from "@/components/clients/MakeupProfessionalCards";
 
 interface Client {
   id: string;
@@ -26,6 +32,7 @@ interface Client {
   phone: string | null;
   email: string | null;
   notes: string | null;
+  birth_date?: string | null;
 }
 
 const Clients = () => {
@@ -34,9 +41,10 @@ const Clients = () => {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", notes: "", birthDate: null as Date | null });
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [birthDateOpen, setBirthDateOpen] = useState(false);
 
   useEffect(() => {
     if (user) fetchClients();
@@ -49,6 +57,9 @@ const Clients = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const birthDateString = form.birthDate
+      ? form.birthDate.toISOString().split("T")[0]
+      : null;
     if (editing) {
       await supabase
         .from("clients")
@@ -57,6 +68,7 @@ const Clients = () => {
           phone: form.phone || null,
           email: form.email || null,
           notes: form.notes || null,
+          birth_date: birthDateString,
         })
         .eq("id", editing.id);
       toast.success("Cliente actualizado");
@@ -67,12 +79,13 @@ const Clients = () => {
         phone: form.phone || null,
         email: form.email || null,
         notes: form.notes || null,
+        birth_date: birthDateString,
       });
       toast.success("Cliente añadido");
     }
     setOpen(false);
     setEditing(null);
-    setForm({ name: "", phone: "", email: "", notes: "" });
+    setForm({ name: "", phone: "", email: "", notes: "", birthDate: null });
     fetchClients();
   };
 
@@ -108,7 +121,8 @@ const Clients = () => {
               setOpen(v);
               if (!v) {
                 setEditing(null);
-                setForm({ name: "", phone: "", email: "", notes: "" });
+                setForm({ name: "", phone: "", email: "", notes: "", birthDate: null });
+                setBirthDateOpen(false);
               }
             }}
           >
@@ -130,6 +144,40 @@ const Clients = () => {
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     required
                   />
+                </div>
+                <div>
+                  <Label>Fecha de nacimiento</Label>
+                  <Popover open={birthDateOpen} onOpenChange={setBirthDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !form.birthDate && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {form.birthDate
+                          ? format(form.birthDate, "PPP", { locale: es })
+                          : "Seleccionar"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={form.birthDate || undefined}
+                        onSelect={(d) => {
+                          setForm({ ...form, birthDate: d || null });
+                          setBirthDateOpen(false);
+                        }}
+                        captionLayout="dropdown"
+                        fromYear={1940}
+                        toYear={new Date().getFullYear()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label>Teléfono</Label>
@@ -214,7 +262,9 @@ const Clients = () => {
                         phone: client.phone || "",
                         email: client.email || "",
                         notes: client.notes || "",
+                        birthDate: client.birth_date ? new Date(client.birth_date) : null,
                       });
+                      setBirthDateOpen(false);
                       setOpen(true);
                     }}
                   >
@@ -263,6 +313,16 @@ const Clients = () => {
                     Información de contacto
                   </h3>
                   <div className="space-y-2">
+                    {selectedClient.birth_date && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                        <span>
+                          {format(new Date(selectedClient.birth_date), "d 'de' MMMM, yyyy", {
+                            locale: es,
+                          })}
+                        </span>
+                      </div>
+                    )}
                     {selectedClient.phone && (
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="w-4 h-4 text-muted-foreground" />
@@ -298,12 +358,26 @@ const Clients = () => {
                   <AestheticHistoryCards
                     clientId={selectedClient.id}
                     clientName={selectedClient.name}
+                    clientPhone={selectedClient.phone}
+                    clientEmail={selectedClient.email}
+                    clientBirthDate={selectedClient.birth_date}
                   />
-                  
+
                   <div className="pt-4 border-t">
-                    <ClientCards
+                    <VisagismCards
                       clientId={selectedClient.id}
                       clientName={selectedClient.name}
+                      clientPhone={selectedClient.phone}
+                      clientEmail={selectedClient.email}
+                    />
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <MakeupProfessionalCards
+                      clientId={selectedClient.id}
+                      clientName={selectedClient.name}
+                      clientPhone={selectedClient.phone}
+                      clientEmail={selectedClient.email}
                     />
                   </div>
                   
@@ -334,7 +408,11 @@ const Clients = () => {
                   </div>
                   
                   <div className="pt-4 border-t">
-                    <HairScalpCards clientId={selectedClient.id} />
+                    <HairScalpCards
+                      clientId={selectedClient.id}
+                      clientPhone={selectedClient.phone}
+                      clientEmail={selectedClient.email}
+                    />
                   </div>
                 </div>
               </div>

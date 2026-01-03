@@ -260,8 +260,8 @@ export function WaxingTreatmentCards({ clientId }: WaxingTreatmentCardsProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <FileText className="w-4 h-4" />
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <FileText className="w-5 h-5 text-amber-500" />
           Fichas de Depilación
         </h3>
         <Dialog
@@ -275,9 +275,9 @@ export function WaxingTreatmentCards({ clientId }: WaxingTreatmentCardsProps) {
           }}
         >
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1">
+            <Button size="sm" className="gap-2">
               <Plus className="w-4 h-4" />
-              Nueva
+              Nueva Ficha
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -662,7 +662,9 @@ export function WaxingTreatmentCards({ clientId }: WaxingTreatmentCardsProps) {
       {/* Cards list */}
       <div className="space-y-3">
         {cards.length === 0 ? (
-          <p className="text-sm text-muted-foreground italic">No hay fichas de depilación</p>
+          <p className="text-muted-foreground text-sm py-4 text-center">
+            No hay fichas de depilación para este cliente
+          </p>
         ) : (
           cards.map((card) => (
             <Card key={card.id} className="card-hover">

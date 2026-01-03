@@ -74,6 +74,9 @@ interface AestheticHistoryCard {
 interface AestheticHistoryCardsProps {
   clientId: string;
   clientName: string;
+  clientPhone?: string | null;
+  clientEmail?: string | null;
+  clientBirthDate?: string | null;
 }
 
 const SKIN_TYPES = ["Normal", "Seca", "Mixta", "Grasa", "Sensible"];
@@ -89,7 +92,7 @@ const DIURESIS_OPTIONS = ["Normal", "Disminuida", "Aumentada"];
 const INTESTINAL_HABIT = ["Regular", "Estreñimiento", "Diarrea"];
 const INTEREST_AREAS = ["Facial", "Corporal", "Capilar", "Otro"];
 
-const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsProps) => {
+const AestheticHistoryCards = ({ clientId, clientName, clientPhone, clientEmail, clientBirthDate }: AestheticHistoryCardsProps) => {
   const { user } = useAuth();
   const [cards, setCards] = useState<AestheticHistoryCard[]>([]);
   const [open, setOpen] = useState(false);
@@ -99,13 +102,21 @@ const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsPr
   const [birthDateOpen, setBirthDateOpen] = useState(false);
   const [signatureDateOpen, setSignatureDateOpen] = useState(false);
 
-  const getInitialForm = () => ({
-    date: new Date(),
-    birth_date: null as Date | null,
-    age: "",
+  const getInitialForm = () => {
+    const birthDateFromClient = clientBirthDate ? new Date(clientBirthDate) : null;
+    const today = new Date();
+    const initialAge = birthDateFromClient
+      ? today.getFullYear() - birthDateFromClient.getFullYear() -
+        (today < new Date(today.getFullYear(), birthDateFromClient.getMonth(), birthDateFromClient.getDate()) ? 1 : 0)
+      : "";
+
+    return {
+      date: new Date(),
+      birth_date: birthDateFromClient,
+      age: initialAge === "" ? "" : String(initialAge),
     profession: "",
-    phone: "",
-    email: "",
+    phone: clientPhone || "",
+    email: clientEmail || "",
     current_past_diseases: "",
     chronic_diseases: "",
     allergies: "",
@@ -148,7 +159,7 @@ const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsPr
     client_signature: "",
     signature_date: null as Date | null,
     professional_signature: "",
-  });
+  };
 
   const [form, setForm] = useState(getInitialForm());
 
@@ -331,7 +342,7 @@ const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsPr
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-violet-600" />
+          <ClipboardList className="w-5 h-5 text-rose-500" />
           Historial Integral Estético
         </h3>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
@@ -370,13 +381,33 @@ const AestheticHistoryCards = ({ clientId, clientName }: AestheticHistoryCardsPr
                     <Label>Fecha de nacimiento</Label>
                     <Popover open={birthDateOpen} onOpenChange={setBirthDateOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !form.birth_date && "text-muted-foreground")}>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !form.birth_date && "text-muted-foreground",
+                          )}
+                        >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {form.birth_date ? format(form.birth_date, "PPP", { locale: es }) : "Seleccionar"}
+                          {form.birth_date
+                            ? format(form.birth_date, "PPP", { locale: es })
+                            : "Seleccionar"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={form.birth_date || undefined} onSelect={(d) => { setForm({ ...form, birth_date: d || null }); setBirthDateOpen(false); }} initialFocus className={cn("p-3 pointer-events-auto")} />
+                        <Calendar
+                          mode="single"
+                          selected={form.birth_date || undefined}
+                          onSelect={(d) => {
+                            setForm({ ...form, birth_date: d || null });
+                            setBirthDateOpen(false);
+                          }}
+                          captionLayout="dropdown"
+                          fromYear={1940}
+                          toYear={new Date().getFullYear()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
                       </PopoverContent>
                     </Popover>
                   </div>

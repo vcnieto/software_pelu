@@ -282,8 +282,8 @@ const BodyTreatmentCards = ({ clientId, clientName }: BodyTreatmentCardsProps) =
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Activity className="w-5 h-5 text-teal-600" />
-          Fichas de Tratamientos Corporales
+          <Activity className="w-5 h-5 text-sky-500" />
+          Fichas de Tratamiento Corporal
         </h3>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>

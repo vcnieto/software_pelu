@@ -286,8 +286,8 @@ export function EyelashEyebrowCards({ clientId }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-          <Eye className="w-4 h-4" />
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Eye className="w-5 h-5 text-violet-500" />
           Fichas de Pestañas y Cejas
         </h3>
         <Dialog
@@ -301,9 +301,9 @@ export function EyelashEyebrowCards({ clientId }: Props) {
           }}
         >
           <DialogTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-1">
+            <Button size="sm" className="gap-2">
               <Plus className="w-4 h-4" />
-              Nueva
+              Nueva Ficha
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -745,8 +745,8 @@ export function EyelashEyebrowCards({ clientId }: Props) {
           </Card>
         ))}
         {cards.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No hay fichas de pestañas y cejas
+          <p className="text-muted-foreground text-sm py-4 text-center">
+            No hay fichas de pestañas y cejas para este cliente
           </p>
         )}
       </div>
