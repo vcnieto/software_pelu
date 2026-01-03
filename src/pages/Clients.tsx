@@ -17,6 +17,7 @@ import FacialSkinCards from "@/components/clients/FacialSkinCards";
 import AestheticHistoryCards from "@/components/clients/AestheticHistoryCards";
 import { MassageDlmCards } from "@/components/clients/MassageDlmCards";
 import { EyelashEyebrowCards } from "@/components/clients/EyelashEyebrowCards";
+import { WaxingTreatmentCards } from "@/components/clients/WaxingTreatmentCards";
 
 interface Client {
   id: string;
@@ -325,6 +326,10 @@ const Clients = () => {
                   
                   <div className="pt-4 border-t">
                     <EyelashEyebrowCards clientId={selectedClient.id} />
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <WaxingTreatmentCards clientId={selectedClient.id} />
                   </div>
                 </div>
               </div>
