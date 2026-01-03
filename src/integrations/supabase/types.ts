@@ -919,6 +919,141 @@ export type Database = {
         }
         Relationships: []
       }
+      waxing_treatment_cards: {
+        Row: {
+          age: number | null
+          client_id: string
+          client_recommendations: string | null
+          created_at: string
+          date: string
+          hair_color: string | null
+          hair_density: string | null
+          hair_length: string | null
+          hair_removal_direction: string | null
+          hair_type: string | null
+          id: string
+          post_aloe_gel: string | null
+          post_calming_cream: string | null
+          post_oil: string | null
+          post_other_products: string | null
+          pre_cleanser: string | null
+          pre_oil: string | null
+          pre_other_products: string | null
+          pre_talc: string | null
+          previous_external_treatments: string | null
+          professional_id: string | null
+          professional_registration: string | null
+          session_number: number | null
+          skin_condition: string | null
+          skin_condition_other: string | null
+          skin_type: string | null
+          special_observations: string | null
+          treatment_reactions: string[] | null
+          treatment_reactions_other: string | null
+          user_id: string
+          wax_batch: string | null
+          wax_type: string | null
+          wax_type_other: string | null
+          waxing_areas: string[] | null
+          waxing_areas_other: string | null
+          waxing_method: string | null
+          waxing_method_other: string | null
+        }
+        Insert: {
+          age?: number | null
+          client_id: string
+          client_recommendations?: string | null
+          created_at?: string
+          date?: string
+          hair_color?: string | null
+          hair_density?: string | null
+          hair_length?: string | null
+          hair_removal_direction?: string | null
+          hair_type?: string | null
+          id?: string
+          post_aloe_gel?: string | null
+          post_calming_cream?: string | null
+          post_oil?: string | null
+          post_other_products?: string | null
+          pre_cleanser?: string | null
+          pre_oil?: string | null
+          pre_other_products?: string | null
+          pre_talc?: string | null
+          previous_external_treatments?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_condition?: string | null
+          skin_condition_other?: string | null
+          skin_type?: string | null
+          special_observations?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id: string
+          wax_batch?: string | null
+          wax_type?: string | null
+          wax_type_other?: string | null
+          waxing_areas?: string[] | null
+          waxing_areas_other?: string | null
+          waxing_method?: string | null
+          waxing_method_other?: string | null
+        }
+        Update: {
+          age?: number | null
+          client_id?: string
+          client_recommendations?: string | null
+          created_at?: string
+          date?: string
+          hair_color?: string | null
+          hair_density?: string | null
+          hair_length?: string | null
+          hair_removal_direction?: string | null
+          hair_type?: string | null
+          id?: string
+          post_aloe_gel?: string | null
+          post_calming_cream?: string | null
+          post_oil?: string | null
+          post_other_products?: string | null
+          pre_cleanser?: string | null
+          pre_oil?: string | null
+          pre_other_products?: string | null
+          pre_talc?: string | null
+          previous_external_treatments?: string | null
+          professional_id?: string | null
+          professional_registration?: string | null
+          session_number?: number | null
+          skin_condition?: string | null
+          skin_condition_other?: string | null
+          skin_type?: string | null
+          special_observations?: string | null
+          treatment_reactions?: string[] | null
+          treatment_reactions_other?: string | null
+          user_id?: string
+          wax_batch?: string | null
+          wax_type?: string | null
+          wax_type_other?: string | null
+          waxing_areas?: string[] | null
+          waxing_areas_other?: string | null
+          waxing_method?: string | null
+          waxing_method_other?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waxing_treatment_cards_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waxing_treatment_cards_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
