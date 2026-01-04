@@ -160,6 +160,7 @@ const AestheticHistoryCards = ({ clientId, clientName, clientPhone, clientEmail,
     signature_date: null as Date | null,
     professional_signature: "",
   };
+  };
 
   const [form, setForm] = useState(getInitialForm());
 
