@@ -323,14 +323,17 @@ const CalendarView = () => {
                               return startHour === hour;
                             });
                             
-                            return (
+                              const totalAppts = hourAppts.length;
+                              return (
                               <div 
                                 key={day.toISOString()} 
                                 className={`p-0.5 border-r last:border-r-0 h-16 relative ${isToday(day) ? 'bg-primary/5' : ''}`}
                               >
-                                {hourAppts.map(apt => {
+                                {hourAppts.map((apt, aptIndex) => {
                                   const color = getProfessionalColor(apt.professionals);
                                   const heightPx = Math.max((apt.duration / 60) * 64, 28);
+                                  const widthPercent = totalAppts > 1 ? (100 / totalAppts) - 1 : 100;
+                                  const leftPercent = totalAppts > 1 ? aptIndex * (100 / totalAppts) : 0;
                                   
                                   return (
                                     <div 
@@ -340,9 +343,11 @@ const CalendarView = () => {
                                         height: `${heightPx}px`,
                                         backgroundColor: color + "20",
                                         borderColor: color,
-                                        color: color
+                                        color: color,
+                                        width: `${widthPercent}%`,
+                                        left: `${leftPercent}%`
                                       }}
-                                      className="absolute left-0.5 right-0.5 p-1 rounded cursor-pointer overflow-hidden z-10 border-l-2 hover:opacity-90 transition-opacity"
+                                      className="absolute p-1 rounded cursor-pointer overflow-hidden z-10 border-l-2 hover:opacity-90 transition-opacity"
                                     >
                                       <p className="text-[9px] font-semibold leading-none">
                                         {apt.start_time.slice(0, 5)}
@@ -389,9 +394,12 @@ const CalendarView = () => {
                               {String(hour).padStart(2, '0')}:00
                             </div>
                             <div className="p-1 h-20 relative">
-                              {hourAppts.map(apt => {
+                              {hourAppts.map((apt, aptIndex) => {
                                 const color = getProfessionalColor(apt.professionals);
                                 const heightPx = Math.max((apt.duration / 60) * 80, 36);
+                                const totalAppts = hourAppts.length;
+                                const widthPercent = totalAppts > 1 ? (100 / totalAppts) - 0.5 : 100;
+                                const leftPercent = totalAppts > 1 ? aptIndex * (100 / totalAppts) : 0;
                                 
                                 return (
                                   <div 
@@ -401,9 +409,11 @@ const CalendarView = () => {
                                       height: `${heightPx}px`,
                                       backgroundColor: color + "20",
                                       borderColor: color,
-                                      color: color
+                                      color: color,
+                                      width: `calc(${widthPercent}% - 4px)`,
+                                      left: `calc(${leftPercent}% + 2px)`
                                     }}
-                                    className="absolute left-1 right-1 p-2 rounded-lg cursor-pointer overflow-hidden border-l-[3px] hover:opacity-90 transition-opacity shadow-sm"
+                                    className="absolute p-2 rounded-lg cursor-pointer overflow-hidden border-l-[3px] hover:opacity-90 transition-opacity shadow-sm"
                                   >
                                     <div className="flex items-center gap-2">
                                       <p className="text-xs font-semibold">
