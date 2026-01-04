@@ -309,37 +309,90 @@ const CalendarView = () => {
                       ))}
                     </div>
                     
-                    {/* Hours grid - scrollable */}
-                    <div className="flex-1 overflow-auto">
-                      {hours.map(hour => (
-                        <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] border-b last:border-b-0">
-                          <div className="py-1 px-2 text-[10px] text-muted-foreground border-r text-right">
-                            {String(hour).padStart(2, '0')}:00
-                          </div>
-                          {weekDays.map(day => {
-                            const dayAppts = getAppointmentsForDay(day);
-                            const hourAppts = dayAppts.filter(a => {
-                              const startHour = parseInt(a.start_time.split(":")[0]);
-                              return startHour === hour;
-                            });
+                    {/* Hours grid - scrollable with continuous timeline */}
+                    <div className="flex-1 overflow-auto relative">
+                      <div className="grid grid-cols-[60px_repeat(7,1fr)]" style={{ height: `${hours.length * 64}px` }}>
+                        {/* Hour labels column */}
+                        <div className="relative border-r">
+                          {hours.map((hour, idx) => (
+                            <div 
+                              key={hour} 
+                              className="absolute w-full text-[10px] text-muted-foreground text-right pr-2"
+                              style={{ top: `${idx * 64}px`, height: '64px' }}
+                            >
+                              {String(hour).padStart(2, '0')}:00
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Day columns with appointments */}
+                        {weekDays.map(day => {
+                          const dayAppts = getAppointmentsForDay(day);
+                          
+                          // Group overlapping appointments
+                          const getOverlappingGroups = (appts: Appointment[]) => {
+                            const groups: Appointment[][] = [];
+                            const sorted = [...appts].sort((a, b) => a.start_time.localeCompare(b.start_time));
                             
-                              const totalAppts = hourAppts.length;
-                              return (
-                              <div 
-                                key={day.toISOString()} 
-                                className={`p-0.5 border-r last:border-r-0 h-16 relative ${isToday(day) ? 'bg-primary/5' : ''}`}
-                              >
-                                {hourAppts.map((apt, aptIndex) => {
+                            sorted.forEach(apt => {
+                              const [h, m] = apt.start_time.split(":").map(Number);
+                              const aptStart = h * 60 + m;
+                              const aptEnd = aptStart + apt.duration;
+                              
+                              let addedToGroup = false;
+                              for (const group of groups) {
+                                const overlaps = group.some(existing => {
+                                  const [eh, em] = existing.start_time.split(":").map(Number);
+                                  const existingStart = eh * 60 + em;
+                                  const existingEnd = existingStart + existing.duration;
+                                  return aptStart < existingEnd && aptEnd > existingStart;
+                                });
+                                if (overlaps) {
+                                  group.push(apt);
+                                  addedToGroup = true;
+                                  break;
+                                }
+                              }
+                              if (!addedToGroup) {
+                                groups.push([apt]);
+                              }
+                            });
+                            return groups;
+                          };
+                          
+                          const groups = getOverlappingGroups(dayAppts);
+                          
+                          return (
+                            <div 
+                              key={day.toISOString()} 
+                              className={`relative border-r last:border-r-0 ${isToday(day) ? 'bg-primary/5' : ''}`}
+                            >
+                              {/* Hour grid lines */}
+                              {hours.map((hour, idx) => (
+                                <div 
+                                  key={hour}
+                                  className="absolute w-full border-b"
+                                  style={{ top: `${idx * 64}px`, height: '64px' }}
+                                />
+                              ))}
+                              
+                              {/* Appointments */}
+                              {groups.flatMap(group => 
+                                group.map((apt, aptIndex) => {
                                   const color = getProfessionalColor(apt.professionals);
-                                  const heightPx = Math.max((apt.duration / 60) * 64, 28);
-                                  const widthPercent = totalAppts > 1 ? (100 / totalAppts) - 1 : 100;
-                                  const leftPercent = totalAppts > 1 ? aptIndex * (100 / totalAppts) : 0;
+                                  const [startH, startM] = apt.start_time.split(":").map(Number);
+                                  const topPx = ((startH - hours[0]) * 64) + ((startM / 60) * 64);
+                                  const heightPx = Math.max((apt.duration / 60) * 64, 24);
+                                  const totalInGroup = group.length;
+                                  const widthPercent = totalInGroup > 1 ? (100 / totalInGroup) - 1 : 98;
+                                  const leftPercent = totalInGroup > 1 ? aptIndex * (100 / totalInGroup) + 1 : 1;
                                   
                                   return (
                                     <div 
                                       key={apt.id}
                                       onClick={() => handleAppointmentClick(apt)}
                                       style={{ 
+                                        top: `${topPx}px`,
                                         height: `${heightPx}px`,
                                         backgroundColor: color + "20",
                                         borderColor: color,
@@ -356,12 +409,12 @@ const CalendarView = () => {
                                       <p className="text-[8px] truncate opacity-75">{apt.clients?.name}</p>
                                     </div>
                                   );
-                                })}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ))}
+                                })
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -379,41 +432,94 @@ const CalendarView = () => {
                       </p>
                     </div>
                     
-                    {/* Hours grid - scrollable */}
+                    {/* Hours grid - continuous timeline */}
                     <div className="flex-1 overflow-auto">
-                      {hours.map(hour => {
-                        const dayAppts = getAppointmentsForDay(currentDate);
-                        const hourAppts = dayAppts.filter(a => {
-                          const startHour = parseInt(a.start_time.split(":")[0]);
-                          return startHour === hour;
-                        });
-                        
-                        return (
-                          <div key={hour} className="grid grid-cols-[80px_1fr] border-b last:border-b-0">
-                            <div className="py-2 px-3 text-xs text-muted-foreground border-r text-right font-medium">
+                      <div className="grid grid-cols-[80px_1fr] relative" style={{ height: `${hours.length * 80}px` }}>
+                        {/* Hour labels column */}
+                        <div className="relative border-r">
+                          {hours.map((hour, idx) => (
+                            <div 
+                              key={hour} 
+                              className="absolute w-full text-xs text-muted-foreground text-right pr-3 font-medium"
+                              style={{ top: `${idx * 80}px`, height: '80px' }}
+                            >
                               {String(hour).padStart(2, '0')}:00
                             </div>
-                            <div className="p-1 h-20 relative">
-                              {hourAppts.map((apt, aptIndex) => {
+                          ))}
+                        </div>
+                        
+                        {/* Appointments column */}
+                        <div className="relative">
+                          {/* Hour grid lines */}
+                          {hours.map((hour, idx) => (
+                            <div 
+                              key={hour}
+                              className="absolute w-full border-b"
+                              style={{ top: `${idx * 80}px`, height: '80px' }}
+                            />
+                          ))}
+                          
+                          {/* Appointments */}
+                          {(() => {
+                            const dayAppts = getAppointmentsForDay(currentDate);
+                            
+                            // Group overlapping appointments
+                            const getOverlappingGroups = (appts: Appointment[]) => {
+                              const groups: Appointment[][] = [];
+                              const sorted = [...appts].sort((a, b) => a.start_time.localeCompare(b.start_time));
+                              
+                              sorted.forEach(apt => {
+                                const [h, m] = apt.start_time.split(":").map(Number);
+                                const aptStart = h * 60 + m;
+                                const aptEnd = aptStart + apt.duration;
+                                
+                                let addedToGroup = false;
+                                for (const group of groups) {
+                                  const overlaps = group.some(existing => {
+                                    const [eh, em] = existing.start_time.split(":").map(Number);
+                                    const existingStart = eh * 60 + em;
+                                    const existingEnd = existingStart + existing.duration;
+                                    return aptStart < existingEnd && aptEnd > existingStart;
+                                  });
+                                  if (overlaps) {
+                                    group.push(apt);
+                                    addedToGroup = true;
+                                    break;
+                                  }
+                                }
+                                if (!addedToGroup) {
+                                  groups.push([apt]);
+                                }
+                              });
+                              return groups;
+                            };
+                            
+                            const groups = getOverlappingGroups(dayAppts);
+                            
+                            return groups.flatMap(group => 
+                              group.map((apt, aptIndex) => {
                                 const color = getProfessionalColor(apt.professionals);
+                                const [startH, startM] = apt.start_time.split(":").map(Number);
+                                const topPx = ((startH - hours[0]) * 80) + ((startM / 60) * 80);
                                 const heightPx = Math.max((apt.duration / 60) * 80, 36);
-                                const totalAppts = hourAppts.length;
-                                const widthPercent = totalAppts > 1 ? (100 / totalAppts) - 0.5 : 100;
-                                const leftPercent = totalAppts > 1 ? aptIndex * (100 / totalAppts) : 0;
+                                const totalInGroup = group.length;
+                                const widthPercent = totalInGroup > 1 ? (100 / totalInGroup) - 0.5 : 99;
+                                const leftPercent = totalInGroup > 1 ? aptIndex * (100 / totalInGroup) + 0.5 : 0.5;
                                 
                                 return (
                                   <div 
                                     key={apt.id}
                                     onClick={() => handleAppointmentClick(apt)}
                                     style={{ 
+                                      top: `${topPx}px`,
                                       height: `${heightPx}px`,
                                       backgroundColor: color + "20",
                                       borderColor: color,
                                       color: color,
-                                      width: `calc(${widthPercent}% - 4px)`,
-                                      left: `calc(${leftPercent}% + 2px)`
+                                      width: `calc(${widthPercent}% - 8px)`,
+                                      left: `calc(${leftPercent}% + 4px)`
                                     }}
-                                    className="absolute p-2 rounded-lg cursor-pointer overflow-hidden border-l-[3px] hover:opacity-90 transition-opacity shadow-sm"
+                                    className="absolute p-2 rounded-lg cursor-pointer overflow-hidden border-l-[3px] hover:opacity-90 transition-opacity shadow-sm z-10"
                                   >
                                     <div className="flex items-center gap-2">
                                       <p className="text-xs font-semibold">
@@ -427,11 +533,11 @@ const CalendarView = () => {
                                     )}
                                   </div>
                                 );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
+                              })
+                            );
+                          })()}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
