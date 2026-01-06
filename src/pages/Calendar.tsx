@@ -5,9 +5,10 @@ import Sidebar from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Calendar, Clock, User, Scissors, UserCircle, FileText, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, Scissors, UserCircle, FileText, Plus } from "lucide-react";
 import { format, addDays, startOfWeek, addWeeks, subWeeks, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, isToday, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
+import AppointmentFormDialog from "@/components/appointments/AppointmentFormDialog";
 
 interface Appointment {
   id: string;
@@ -31,6 +32,11 @@ const CalendarView = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  
+  // New appointment form state
+  const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
+  const [appointmentFormDate, setAppointmentFormDate] = useState<Date | undefined>();
+  const [appointmentFormTime, setAppointmentFormTime] = useState<string | undefined>();
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -39,7 +45,7 @@ const CalendarView = () => {
   const monthDays = eachDayOfInterval({ 
     start: startOfWeek(monthStart, { weekStartsOn: 1 }), 
     end: addDays(startOfWeek(addDays(monthEnd, 6), { weekStartsOn: 1 }), 6) 
-  }).slice(0, 42); // Ensure 6 weeks
+  }).slice(0, 42);
   const hours = Array.from({ length: 14 }, (_, i) => i + 6); // 6:00 to 19:00
 
   useEffect(() => { 
@@ -90,7 +96,8 @@ const CalendarView = () => {
     else setCurrentDate(direction > 0 ? addMonths(currentDate, 1) : subMonths(currentDate, 1));
   };
 
-  const handleAppointmentClick = (apt: Appointment) => {
+  const handleAppointmentClick = (apt: Appointment, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setSelectedAppointment(apt);
     setDetailOpen(true);
   };
@@ -99,8 +106,20 @@ const CalendarView = () => {
     setSelectedDate(date);
     setCurrentDate(date);
     if (view === "month") {
-      setView("day");
+      // Open form with date pre-filled
+      setAppointmentFormDate(date);
+      setAppointmentFormTime(undefined);
+      setAppointmentFormOpen(true);
     }
+  };
+
+  // Handle clicking on a time slot in day/week view
+  const handleTimeSlotClick = (date: Date, hour: number, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const time = `${String(hour).padStart(2, "0")}:00`;
+    setAppointmentFormDate(date);
+    setAppointmentFormTime(time);
+    setAppointmentFormOpen(true);
   };
 
   // Group appointments by date for list view
@@ -111,17 +130,25 @@ const CalendarView = () => {
     return acc;
   }, {} as Record<string, Appointment[]>);
 
-  const getWeekdayName = (dateStr: string) => {
-    const date = new Date(dateStr + "T00:00:00");
-    return format(date, "EEEE", { locale: es }).toUpperCase();
-  };
-
   return (
     <Sidebar>
       <div className="p-4 lg:p-6 h-[calc(100vh-4rem)] flex flex-col animate-fade-in">
         <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
           {/* Left sidebar - Mini Calendar */}
-          <div className="lg:w-64 shrink-0">
+          <div className="lg:w-64 shrink-0 space-y-3">
+            {/* Quick Add Button */}
+            <Button 
+              className="w-full btn-primary-gradient gap-2 shadow-lg"
+              onClick={() => {
+                setAppointmentFormDate(undefined);
+                setAppointmentFormTime(undefined);
+                setAppointmentFormOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Nueva Cita
+            </Button>
+
             <Card className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-medium text-sm">
@@ -152,7 +179,10 @@ const CalendarView = () => {
                   return (
                     <button
                       key={day.toISOString()}
-                      onClick={() => handleDayClick(day)}
+                      onClick={() => {
+                        setSelectedDate(day);
+                        setCurrentDate(day);
+                      }}
                       className={`
                         text-[10px] p-1 rounded transition-colors relative
                         ${!isCurrentMonth ? "text-muted-foreground/40" : ""}
@@ -247,25 +277,28 @@ const CalendarView = () => {
                             key={day.toISOString()} 
                             onClick={() => handleDayClick(day)}
                             className={`
-                              p-1.5 border-b border-r cursor-pointer transition-colors hover:bg-muted/30 flex flex-col overflow-hidden
+                              p-1.5 border-b border-r cursor-pointer transition-colors hover:bg-muted/30 flex flex-col overflow-hidden group
                               ${!isCurrentMonth ? "bg-muted/20" : ""}
                               ${idx % 7 === 0 ? "border-l-0" : ""}
                             `}
                           >
-                            <p className={`
-                              text-xs font-medium mb-1 shrink-0
-                              ${!isCurrentMonth ? "text-muted-foreground/40" : ""}
-                              ${isCurrentDay ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]" : ""}
-                            `}>
-                              {format(day, "d")}
-                            </p>
-                            <div className="space-y-0.5 overflow-hidden flex-1">
-                            {dayAppts.slice(0, 4).map(apt => {
+                            <div className="flex items-center justify-between shrink-0">
+                              <p className={`
+                                text-xs font-medium
+                                ${!isCurrentMonth ? "text-muted-foreground/40" : ""}
+                                ${isCurrentDay ? "w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]" : ""}
+                              `}>
+                                {format(day, "d")}
+                              </p>
+                              <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity" />
+                            </div>
+                            <div className="space-y-0.5 overflow-hidden flex-1 mt-1">
+                              {dayAppts.slice(0, 4).map(apt => {
                                 const color = getProfessionalColor(apt.professionals);
                                 return (
                                   <div 
                                     key={apt.id} 
-                                    onClick={(e) => { e.stopPropagation(); handleAppointmentClick(apt); }}
+                                    onClick={(e) => handleAppointmentClick(apt, e)}
                                     className="text-[9px] leading-tight px-1.5 py-0.5 rounded cursor-pointer truncate hover:opacity-80 border-l-2"
                                     style={{ 
                                       backgroundColor: color + "20", 
@@ -367,13 +400,16 @@ const CalendarView = () => {
                               key={day.toISOString()} 
                               className={`relative border-r last:border-r-0 ${isToday(day) ? 'bg-primary/5' : ''}`}
                             >
-                              {/* Hour grid lines */}
+                              {/* Clickable hour slots */}
                               {hours.map((hour, idx) => (
                                 <div 
                                   key={hour}
-                                  className="absolute w-full border-b"
+                                  className="absolute w-full border-b cursor-pointer hover:bg-muted/50 transition-colors group"
                                   style={{ top: `${idx * 64}px`, height: '64px' }}
-                                />
+                                  onClick={(e) => handleTimeSlotClick(day, hour, e)}
+                                >
+                                  <Plus className="w-4 h-4 absolute top-2 left-2 opacity-0 group-hover:opacity-30 transition-opacity text-primary" />
+                                </div>
                               ))}
                               
                               {/* Appointments */}
@@ -390,7 +426,7 @@ const CalendarView = () => {
                                   return (
                                     <div 
                                       key={apt.id}
-                                      onClick={() => handleAppointmentClick(apt)}
+                                      onClick={(e) => handleAppointmentClick(apt, e)}
                                       style={{ 
                                         top: `${topPx}px`,
                                         height: `${heightPx}px`,
@@ -450,13 +486,16 @@ const CalendarView = () => {
                         
                         {/* Appointments column */}
                         <div className="relative">
-                          {/* Hour grid lines */}
+                          {/* Clickable hour slots */}
                           {hours.map((hour, idx) => (
                             <div 
                               key={hour}
-                              className="absolute w-full border-b"
+                              className="absolute w-full border-b cursor-pointer hover:bg-muted/50 transition-colors group"
                               style={{ top: `${idx * 80}px`, height: '80px' }}
-                            />
+                              onClick={(e) => handleTimeSlotClick(currentDate, hour, e)}
+                            >
+                              <Plus className="w-5 h-5 absolute top-3 left-3 opacity-0 group-hover:opacity-30 transition-opacity text-primary" />
+                            </div>
                           ))}
                           
                           {/* Appointments */}
@@ -509,7 +548,7 @@ const CalendarView = () => {
                                 return (
                                   <div 
                                     key={apt.id}
-                                    onClick={() => handleAppointmentClick(apt)}
+                                    onClick={(e) => handleAppointmentClick(apt, e)}
                                     style={{ 
                                       top: `${topPx}px`,
                                       height: `${heightPx}px`,
@@ -549,6 +588,18 @@ const CalendarView = () => {
                       <div className="p-12 text-center text-muted-foreground">
                         <Calendar className="w-16 h-16 mx-auto mb-4 opacity-50" />
                         <p className="text-lg">No hay citas programadas para este período</p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-4"
+                          onClick={() => {
+                            setAppointmentFormDate(undefined);
+                            setAppointmentFormTime(undefined);
+                            setAppointmentFormOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Crear primera cita
+                        </Button>
                       </div>
                     ) : (
                       <div className="divide-y">
@@ -685,6 +736,15 @@ const CalendarView = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Appointment Form Dialog */}
+      <AppointmentFormDialog
+        open={appointmentFormOpen}
+        onOpenChange={setAppointmentFormOpen}
+        initialDate={appointmentFormDate}
+        initialTime={appointmentFormTime}
+        onSuccess={fetchAppointments}
+      />
     </Sidebar>
   );
 };
