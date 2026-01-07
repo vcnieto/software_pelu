@@ -36,7 +36,6 @@ const CalendarView = () => {
   // New appointment form state
   const [appointmentFormOpen, setAppointmentFormOpen] = useState(false);
   const [appointmentFormDate, setAppointmentFormDate] = useState<Date | undefined>();
-  const [appointmentFormTime, setAppointmentFormTime] = useState<string | undefined>();
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -108,7 +107,6 @@ const CalendarView = () => {
     if (view === "month") {
       // Open form with date pre-filled
       setAppointmentFormDate(date);
-      setAppointmentFormTime(undefined);
       setAppointmentFormOpen(true);
     }
   };
@@ -116,9 +114,7 @@ const CalendarView = () => {
   // Handle clicking on a time slot in day/week view
   const handleTimeSlotClick = (date: Date, hour: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const time = `${String(hour).padStart(2, "0")}:00`;
     setAppointmentFormDate(date);
-    setAppointmentFormTime(time);
     setAppointmentFormOpen(true);
   };
 
@@ -141,7 +137,6 @@ const CalendarView = () => {
               className="w-full btn-primary-gradient gap-2 shadow-lg"
               onClick={() => {
                 setAppointmentFormDate(undefined);
-                setAppointmentFormTime(undefined);
                 setAppointmentFormOpen(true);
               }}
             >
@@ -593,7 +588,6 @@ const CalendarView = () => {
                           className="mt-4"
                           onClick={() => {
                             setAppointmentFormDate(undefined);
-                            setAppointmentFormTime(undefined);
                             setAppointmentFormOpen(true);
                           }}
                         >
@@ -742,7 +736,6 @@ const CalendarView = () => {
         open={appointmentFormOpen}
         onOpenChange={setAppointmentFormOpen}
         initialDate={appointmentFormDate}
-        initialTime={appointmentFormTime}
         onSuccess={fetchAppointments}
       />
     </Sidebar>
