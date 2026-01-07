@@ -92,7 +92,7 @@ const AppointmentFormDialog = ({
   // Generate available time slots
   const timeSlots = useMemo((): TimeSlot[] => {
     const slots: TimeSlot[] = [];
-    const selectedService = services.find(s => s.id === form.service_id);
+    const selectedService = services.find(s => String(s.id) === form.service_id);
     const serviceDuration = selectedService?.duration || 30;
     
     // Generate slots from 6:00 to 21:00
@@ -132,7 +132,7 @@ const AppointmentFormDialog = ({
   }, [form.service_id, form.professional_id, existingAppointments, services]);
 
   const calculateEndTime = () => {
-    const service = services.find(s => s.id === form.service_id);
+    const service = services.find(s => String(s.id) === form.service_id);
     if (!service || !form.start_time) return null;
     const [hours, minutes] = form.start_time.split(":").map(Number);
     const totalMinutes = hours * 60 + minutes + service.duration;
@@ -175,37 +175,40 @@ const AppointmentFormDialog = ({
     onSuccess?.();
   };
 
-  const selectedService = services.find(s => s.id === form.service_id);
-  const selectedProfessional = professionals.find(p => p.id === form.professional_id);
+  const selectedService = services.find(s => String(s.id) === form.service_id);
+  const selectedProfessional = professionals.find(p => String(p.id) === form.professional_id);
 
-  // Only show available slots when filtering
-  const availableSlots = timeSlots.filter(s => s.available);
+  // Only show available slots when filtering.
+  // Si por cualquier motivo no hay slots "available", usamos todos los generados
+  // para que el usuario siempre pueda escoger una hora.
+  const filteredSlots = timeSlots.filter(s => s.available);
+  const availableSlots = filteredSlots.length > 0 ? filteredSlots : timeSlots;
   const showTimeSelector = form.professional_id && form.service_id && form.date;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-visible flex flex-col bg-[#fffaf7]">
+        <DialogHeader className="pb-2 border-b border-border/40">
           <DialogTitle className="text-xl font-display flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary" />
             Nueva Cita
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-visible flex flex-col gap-4 pt-4">
           {/* Client Selection */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              Cliente
+              Cliente *
             </Label>
-            <Select value={form.client_id} onValueChange={v => setForm({ ...form, client_id: v })}>
-              <SelectTrigger>
+            <Select value={form.client_id || undefined} onValueChange={v => setForm({ ...form, client_id: v })}>
+              <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
                 <SelectValue placeholder="Seleccionar cliente" />
               </SelectTrigger>
               <SelectContent>
                 {clients.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -215,15 +218,15 @@ const AppointmentFormDialog = ({
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Scissors className="w-4 h-4" />
-              Servicio
+              Servicio *
             </Label>
-            <Select value={form.service_id} onValueChange={v => setForm({ ...form, service_id: v, start_time: "" })}>
-              <SelectTrigger>
+            <Select value={form.service_id || undefined} onValueChange={v => setForm({ ...form, service_id: v, start_time: "" })}>
+              <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
                 <SelectValue placeholder="Seleccionar servicio" />
               </SelectTrigger>
               <SelectContent>
                 {services.map(s => (
-                  <SelectItem key={s.id} value={s.id}>
+                  <SelectItem key={s.id} value={String(s.id)}>
                     {s.name} ({s.duration} min - {s.price}€)
                   </SelectItem>
                 ))}
@@ -233,14 +236,14 @@ const AppointmentFormDialog = ({
 
           {/* Professional Selection */}
           <div className="space-y-2">
-            <Label>Profesional</Label>
-            <Select value={form.professional_id} onValueChange={v => setForm({ ...form, professional_id: v, start_time: "" })}>
-              <SelectTrigger>
+            <Label>Profesional *</Label>
+            <Select value={form.professional_id || undefined} onValueChange={v => setForm({ ...form, professional_id: v, start_time: "" })}>
+              <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
                 <SelectValue placeholder="Seleccionar profesional" />
               </SelectTrigger>
               <SelectContent>
                 {professionals.map(p => (
-                  <SelectItem key={p.id} value={p.id}>
+                  <SelectItem key={p.id} value={String(p.id)}>
                     {p.name} ({p.specialty})
                   </SelectItem>
                 ))}
@@ -248,104 +251,77 @@ const AppointmentFormDialog = ({
             </Select>
           </div>
 
-          {/* Date Selection */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Fecha
-            </Label>
-            <input
-              type="date"
-              value={form.date}
-              onChange={e => setForm({ ...form, date: e.target.value, start_time: "" })}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
+          {/* Date & Time Selection */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Fecha *
+              </Label>
+              <input
+                type="date"
+                value={form.date}
+                onChange={e => setForm({ ...form, date: e.target.value, start_time: "" })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary/40"
+              />
+            </div>
 
-          {/* Time Slot Selection - Visual Grid */}
-          {showTimeSelector && (
-            <div className="space-y-2 flex-1 overflow-hidden flex flex-col min-h-0">
-              <Label className="flex items-center gap-2 shrink-0">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                Hora disponible
+                Hora inicio *
                 {selectedService && (
-                  <span className="text-xs text-muted-foreground ml-2">
+                  <span className="text-xs text-muted-foreground ml-1">
                     ({selectedService.duration} min)
                   </span>
                 )}
               </Label>
-              
-              {availableSlots.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg">
-                  <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No hay horas disponibles para este día</p>
-                </div>
-              ) : (
-                <ScrollArea className="flex-1 border rounded-lg p-3">
-                  <div className="grid grid-cols-4 gap-2">
+              <Select
+                value={form.start_time || undefined}
+                onValueChange={v => setForm({ ...form, start_time: v })}
+                disabled={!showTimeSelector}
+              >
+                <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
+                  <SelectValue placeholder={
+                    !showTimeSelector
+                      ? "Selecciona servicio y profesional"
+                      : "Seleccionar hora"
+                  } />
+                </SelectTrigger>
+                {showTimeSelector && (
+                  <SelectContent>
                     {availableSlots.map(slot => (
-                      <Button
-                        key={slot.time}
-                        type="button"
-                        variant={form.start_time === slot.time ? "default" : "outline"}
-                        size="sm"
-                        className={cn(
-                          "h-9 text-xs font-medium transition-all",
-                          form.start_time === slot.time && "ring-2 ring-primary ring-offset-2"
-                        )}
-                        onClick={() => setForm({ ...form, start_time: slot.time })}
-                      >
-                        {form.start_time === slot.time && (
-                          <Check className="w-3 h-3 mr-1" />
-                        )}
+                      <SelectItem key={slot.time} value={slot.time}>
                         {slot.time}
-                      </Button>
+                      </SelectItem>
                     ))}
-                  </div>
-                </ScrollArea>
-              )}
+                  </SelectContent>
+                )}
+              </Select>
             </div>
-          )}
-
-          {/* Summary */}
-          {form.service_id && form.start_time && (
-            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm shrink-0">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Duración:</span>
-                <span className="font-medium">{selectedService?.duration} min</span>
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-muted-foreground">Horario:</span>
-                <span className="font-medium">{form.start_time} - {calculateEndTime()}</span>
-              </div>
-              {selectedProfessional && (
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-muted-foreground">Profesional:</span>
-                  <span className="font-medium">{selectedProfessional.name}</span>
-                </div>
-              )}
-            </div>
-          )}
+          </div>
 
           {/* Notes */}
           <div className="space-y-2 shrink-0">
-            <Label>Notas (opcional)</Label>
+            <Label className="text-sm text-muted-foreground">Notas (opcional)</Label>
             <Textarea
               value={form.notes}
               onChange={e => setForm({ ...form, notes: e.target.value })}
               placeholder="Añadir notas sobre la cita..."
-              className="resize-none h-16"
+              className="resize-none h-16 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40"
             />
           </div>
 
           {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full btn-primary-gradient shrink-0"
-            disabled={!form.client_id || !form.service_id || !form.professional_id || !form.start_time || loading}
-          >
-            {loading ? "Creando..." : "Crear Cita"}
-          </Button>
+          <div className="pt-2">
+            <Button
+              type="submit"
+              className="w-full btn-primary-gradient shrink-0"
+              disabled={!form.client_id || !form.service_id || !form.professional_id || !form.start_time || loading}
+            >
+              {loading ? "Creando..." : "Crear Cita"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
