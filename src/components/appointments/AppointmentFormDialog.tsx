@@ -17,7 +17,6 @@ interface AppointmentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialDate?: Date;
-  initialTime?: string;
   onSuccess?: () => void;
 }
 
@@ -30,7 +29,6 @@ const AppointmentFormDialog = ({
   open, 
   onOpenChange, 
   initialDate, 
-  initialTime,
   onSuccess 
 }: AppointmentFormDialogProps) => {
   const { user } = useAuth();
@@ -57,12 +55,12 @@ const AppointmentFormDialog = ({
         service_id: "",
         professional_id: "",
         date: initialDate ? format(initialDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
-        start_time: initialTime || "",
+        start_time: "",
         notes: ""
       });
       fetchData();
     }
-  }, [open, initialDate, initialTime]);
+  }, [open, initialDate]);
 
   // Fetch appointments when date or professional changes
   useEffect(() => {
@@ -192,12 +190,6 @@ const AppointmentFormDialog = ({
             <Calendar className="w-5 h-5 text-primary" />
             Nueva Cita
           </DialogTitle>
-          {initialDate && (
-            <p className="text-sm text-muted-foreground">
-              {format(initialDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
-              {initialTime && ` a las ${initialTime}`}
-            </p>
-          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col gap-4">
@@ -256,21 +248,19 @@ const AppointmentFormDialog = ({
             </Select>
           </div>
 
-          {/* Date (hidden if passed from calendar, shown if opened from button) */}
-          {!initialDate && (
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Fecha
-              </Label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={e => setForm({ ...form, date: e.target.value, start_time: "" })}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              />
-            </div>
-          )}
+          {/* Date Selection */}
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Fecha
+            </Label>
+            <input
+              type="date"
+              value={form.date}
+              onChange={e => setForm({ ...form, date: e.target.value, start_time: "" })}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
 
           {/* Time Slot Selection - Visual Grid */}
           {showTimeSelector && (
