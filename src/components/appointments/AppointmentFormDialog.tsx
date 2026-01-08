@@ -73,7 +73,7 @@ const AppointmentFormDialog = ({
     const [clientsRes, servicesRes, professionalsRes] = await Promise.all([
       supabase.from("clients").select("*").order("name"),
       supabase.from("services").select("*").order("name"),
-      supabase.from("professionals").select("*").order("name")
+      supabase.from("professionals").select("id, name, specialty, color, working_hours").order("name")
     ]);
     setClients(clientsRes.data || []);
     setServices(servicesRes.data || []);
@@ -89,47 +89,78 @@ const AppointmentFormDialog = ({
     setExistingAppointments(data || []);
   };
 
+  // Get working hours for the selected professional and date
+  const getWorkingHours = () => {
+    if (!form.professional_id || !form.date) return null;
+    const professional = professionals.find(p => String(p.id) === form.professional_id);
+    if (!professional?.working_hours) return null;
+    
+    const selectedDate = new Date(form.date + "T12:00:00");
+    const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    const dayHours = professional.working_hours[String(dayOfWeek)];
+    return dayHours || null; // null means closed
+  };
+
   // Generate available time slots
   const timeSlots = useMemo((): TimeSlot[] => {
     const slots: TimeSlot[] = [];
     const selectedService = services.find(s => String(s.id) === form.service_id);
     const serviceDuration = selectedService?.duration || 30;
     
-    // Generate slots from 6:00 to 21:00
-    for (let hour = 6; hour <= 21; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-        const slotStart = hour * 60 + minute;
-        const slotEnd = slotStart + serviceDuration;
-        
-        // Check if this slot overlaps with any existing appointment
-        let available = true;
-        
-        if (form.professional_id && existingAppointments.length > 0) {
-          for (const apt of existingAppointments) {
-            const [aptH, aptM] = apt.start_time.split(":").map(Number);
-            const aptStart = aptH * 60 + aptM;
-            const aptEnd = aptStart + apt.duration;
-            
-            // Check for overlap
-            if (slotStart < aptEnd && slotEnd > aptStart) {
-              available = false;
-              break;
-            }
+    const workingHours = getWorkingHours();
+    
+    // If professional is closed on this day, return empty slots
+    if (!workingHours && form.professional_id && form.date) {
+      return [];
+    }
+    
+    // Parse working hours
+    let workStart = 6 * 60; // Default 6:00
+    let workEnd = 22 * 60;  // Default 22:00
+    
+    if (workingHours) {
+      const [startH, startM] = workingHours.start.split(":").map(Number);
+      const [endH, endM] = workingHours.end.split(":").map(Number);
+      workStart = startH * 60 + startM;
+      workEnd = endH * 60 + endM;
+    }
+    
+    // Generate slots only within working hours
+    for (let minutes = workStart; minutes < workEnd; minutes += 15) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+      const slotStart = minutes;
+      const slotEnd = slotStart + serviceDuration;
+      
+      // Skip if service would end after working hours
+      if (slotEnd > workEnd) {
+        continue;
+      }
+      
+      // Check if this slot overlaps with any existing appointment
+      let available = true;
+      
+      if (form.professional_id && existingAppointments.length > 0) {
+        for (const apt of existingAppointments) {
+          const [aptH, aptM] = apt.start_time.split(":").map(Number);
+          const aptStart = aptH * 60 + aptM;
+          const aptEnd = aptStart + apt.duration;
+          
+          // Check for overlap
+          if (slotStart < aptEnd && slotEnd > aptStart) {
+            available = false;
+            break;
           }
         }
-        
-        // Don't show slots that would end after 22:00
-        if (slotEnd > 22 * 60) {
-          available = false;
-        }
-        
-        slots.push({ time, available });
       }
+      
+      slots.push({ time, available });
     }
     
     return slots;
-  }, [form.service_id, form.professional_id, existingAppointments, services]);
+  }, [form.service_id, form.professional_id, form.date, existingAppointments, services, professionals]);
 
   const calculateEndTime = () => {
     const service = services.find(s => String(s.id) === form.service_id);
@@ -179,11 +210,11 @@ const AppointmentFormDialog = ({
   const selectedProfessional = professionals.find(p => String(p.id) === form.professional_id);
 
   // Only show available slots when filtering.
-  // Si por cualquier motivo no hay slots "available", usamos todos los generados
-  // para que el usuario siempre pueda escoger una hora.
   const filteredSlots = timeSlots.filter(s => s.available);
   const availableSlots = filteredSlots.length > 0 ? filteredSlots : timeSlots;
   const showTimeSelector = form.professional_id && form.service_id && form.date;
+  const workingHours = getWorkingHours();
+  const isClosed = form.professional_id && form.date && !workingHours;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -276,28 +307,36 @@ const AppointmentFormDialog = ({
                   </span>
                 )}
               </Label>
-              <Select
-                value={form.start_time || undefined}
-                onValueChange={v => setForm({ ...form, start_time: v })}
-                disabled={!showTimeSelector}
-              >
-                <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
-                  <SelectValue placeholder={
-                    !showTimeSelector
-                      ? "Selecciona servicio y profesional"
-                      : "Seleccionar hora"
-                  } />
-                </SelectTrigger>
-                {showTimeSelector && (
-                  <SelectContent>
-                    {availableSlots.map(slot => (
-                      <SelectItem key={slot.time} value={slot.time}>
-                        {slot.time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                )}
-              </Select>
+              {isClosed ? (
+                <div className="flex h-10 w-full rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive items-center">
+                  Cerrado este día
+                </div>
+              ) : (
+                <Select
+                  value={form.start_time || undefined}
+                  onValueChange={v => setForm({ ...form, start_time: v })}
+                  disabled={!showTimeSelector || availableSlots.length === 0}
+                >
+                  <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
+                    <SelectValue placeholder={
+                      !showTimeSelector
+                        ? "Selecciona servicio y profesional"
+                        : availableSlots.length === 0
+                        ? "Sin disponibilidad"
+                        : "Seleccionar hora"
+                    } />
+                  </SelectTrigger>
+                  {showTimeSelector && availableSlots.length > 0 && (
+                    <SelectContent>
+                      {availableSlots.map(slot => (
+                        <SelectItem key={slot.time} value={slot.time}>
+                          {slot.time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  )}
+                </Select>
+              )}
             </div>
           </div>
 
