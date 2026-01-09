@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Pencil, Trash2, Phone, Mail, Search, User, FileText, CalendarIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Pencil, Trash2, Phone, Mail, Search, User, FileText, CalendarIcon, ClipboardList, FolderOpen } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,8 @@ import { WaxingTreatmentCards } from "@/components/clients/WaxingTreatmentCards"
 import { HairScalpCards } from "@/components/clients/HairScalpCards";
 import VisagismCards from "@/components/clients/VisagismCards";
 import MakeupProfessionalCards from "@/components/clients/MakeupProfessionalCards";
+import { ClientAppointmentsHistory } from "@/components/clients/ClientAppointmentsHistory";
+import { ClientFilesManager } from "@/components/clients/ClientFilesManager";
 
 interface Client {
   id: string;
@@ -289,10 +292,10 @@ const Clients = () => {
 
       {/* Client Profile Sheet */}
       <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
-        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto p-0">
           {selectedClient && (
-            <>
-              <SheetHeader className="mb-6">
+            <div className="flex flex-col h-full">
+              <SheetHeader className="p-6 pb-4 border-b bg-background sticky top-0 z-10">
                 <SheetTitle className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <User className="w-6 h-6 text-primary" />
@@ -306,117 +309,176 @@ const Clients = () => {
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="space-y-6">
-                {/* Contact Info */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    Información de contacto
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedClient.birth_date && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                        <span>
-                          {format(new Date(selectedClient.birth_date), "d 'de' MMMM, yyyy", {
-                            locale: es,
-                          })}
-                        </span>
-                      </div>
-                    )}
-                    {selectedClient.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span>{selectedClient.phone}</span>
-                      </div>
-                    )}
-                    {selectedClient.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <span>{selectedClient.email}</span>
-                      </div>
-                    )}
-                    {!selectedClient.phone && !selectedClient.email && (
-                      <p className="text-sm text-muted-foreground italic">
-                        Sin información de contacto
-                      </p>
-                    )}
-                  </div>
+              <Tabs defaultValue="datos" className="flex-1">
+                <div className="px-6 pt-4 bg-background sticky top-[88px] z-10 border-b">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="datos" className="gap-1.5 text-xs sm:text-sm">
+                      <User className="w-4 h-4 hidden sm:block" />
+                      Datos
+                    </TabsTrigger>
+                    <TabsTrigger value="fichas" className="gap-1.5 text-xs sm:text-sm">
+                      <ClipboardList className="w-4 h-4 hidden sm:block" />
+                      Fichas
+                    </TabsTrigger>
+                    <TabsTrigger value="citas" className="gap-1.5 text-xs sm:text-sm">
+                      <CalendarIcon className="w-4 h-4 hidden sm:block" />
+                      Citas
+                    </TabsTrigger>
+                    <TabsTrigger value="archivos" className="gap-1.5 text-xs sm:text-sm">
+                      <FolderOpen className="w-4 h-4 hidden sm:block" />
+                      Archivos
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
 
-                {/* Notes */}
-                {selectedClient.notes && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      Notas
-                    </h3>
-                    <p className="text-sm">{selectedClient.notes}</p>
-                  </div>
-                )}
+                <div className="p-6">
+                  {/* Datos del Cliente */}
+                  <TabsContent value="datos" className="mt-0 space-y-6">
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        Información de contacto
+                      </h3>
+                      <div className="space-y-2">
+                        {selectedClient.birth_date && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                            <span>
+                              {format(new Date(selectedClient.birth_date), "d 'de' MMMM, yyyy", {
+                                locale: es,
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        {selectedClient.phone && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Phone className="w-4 h-4 text-muted-foreground" />
+                            <span>{selectedClient.phone}</span>
+                          </div>
+                        )}
+                        {selectedClient.email && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="w-4 h-4 text-muted-foreground" />
+                            <span>{selectedClient.email}</span>
+                          </div>
+                        )}
+                        {!selectedClient.phone && !selectedClient.email && !selectedClient.birth_date && (
+                          <p className="text-sm text-muted-foreground italic">
+                            Sin información de contacto
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                {/* Cards Section */}
-                <div className="pt-4 border-t space-y-6">
-                  <AestheticHistoryCards
-                    clientId={selectedClient.id}
-                    clientName={selectedClient.name}
-                    clientPhone={selectedClient.phone}
-                    clientEmail={selectedClient.email}
-                    clientBirthDate={selectedClient.birth_date}
-                  />
+                    {selectedClient.notes && (
+                      <div className="space-y-3">
+                        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                          Notas
+                        </h3>
+                        <p className="text-sm">{selectedClient.notes}</p>
+                      </div>
+                    )}
 
-                  <div className="pt-4 border-t">
-                    <VisagismCards
+                    <div className="pt-4">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setEditing(selectedClient);
+                          setForm({
+                            name: selectedClient.name,
+                            phone: selectedClient.phone || "",
+                            email: selectedClient.email || "",
+                            notes: selectedClient.notes || "",
+                            birthDate: selectedClient.birth_date ? new Date(selectedClient.birth_date) : null,
+                          });
+                          setBirthDateOpen(false);
+                          setOpen(true);
+                        }}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Editar datos del cliente
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* Fichas */}
+                  <TabsContent value="fichas" className="mt-0 space-y-6">
+                    <AestheticHistoryCards
                       clientId={selectedClient.id}
                       clientName={selectedClient.name}
                       clientPhone={selectedClient.phone}
                       clientEmail={selectedClient.email}
+                      clientBirthDate={selectedClient.birth_date}
                     />
-                  </div>
 
-                  <div className="pt-4 border-t">
-                    <MakeupProfessionalCards
-                      clientId={selectedClient.id}
-                      clientName={selectedClient.name}
-                      clientPhone={selectedClient.phone}
-                      clientEmail={selectedClient.email}
+                    <div className="pt-4 border-t">
+                      <VisagismCards
+                        clientId={selectedClient.id}
+                        clientName={selectedClient.name}
+                        clientPhone={selectedClient.phone}
+                        clientEmail={selectedClient.email}
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <MakeupProfessionalCards
+                        clientId={selectedClient.id}
+                        clientName={selectedClient.name}
+                        clientPhone={selectedClient.phone}
+                        clientEmail={selectedClient.email}
+                      />
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <BodyTreatmentCards
+                        clientId={selectedClient.id}
+                        clientName={selectedClient.name}
+                      />
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <FacialSkinCards
+                        clientId={selectedClient.id}
+                        clientName={selectedClient.name}
+                      />
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <MassageDlmCards clientId={selectedClient.id} />
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <EyelashEyebrowCards clientId={selectedClient.id} />
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <WaxingTreatmentCards clientId={selectedClient.id} />
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <HairScalpCards
+                        clientId={selectedClient.id}
+                        clientPhone={selectedClient.phone}
+                        clientEmail={selectedClient.email}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  {/* Citas */}
+                  <TabsContent value="citas" className="mt-0">
+                    <ClientAppointmentsHistory clientId={selectedClient.id} />
+                  </TabsContent>
+
+                  {/* Archivos */}
+                  <TabsContent value="archivos" className="mt-0">
+                    <ClientFilesManager 
+                      clientId={selectedClient.id} 
+                      clientName={selectedClient.name} 
                     />
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <BodyTreatmentCards
-                      clientId={selectedClient.id}
-                      clientName={selectedClient.name}
-                    />
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <FacialSkinCards
-                      clientId={selectedClient.id}
-                      clientName={selectedClient.name}
-                    />
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <MassageDlmCards clientId={selectedClient.id} />
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <EyelashEyebrowCards clientId={selectedClient.id} />
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <WaxingTreatmentCards clientId={selectedClient.id} />
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <HairScalpCards
-                      clientId={selectedClient.id}
-                      clientPhone={selectedClient.phone}
-                      clientEmail={selectedClient.email}
-                    />
-                  </div>
+                  </TabsContent>
                 </div>
-              </div>
-            </>
+              </Tabs>
+            </div>
           )}
         </SheetContent>
       </Sheet>
