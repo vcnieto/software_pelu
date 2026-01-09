@@ -14,7 +14,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FileText, Upload, Download, Trash2, File, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { FileText, Upload, Download, Trash2, File, Loader2, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
@@ -39,6 +45,9 @@ export const ClientFilesManager = ({ clientId, clientName }: ClientFilesManagerP
   const [uploading, setUploading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<ClientFile | null>(null);
+  const [previewFile, setPreviewFile] = useState<ClientFile | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -117,6 +126,32 @@ export const ClientFilesManager = ({ clientId, clientName }: ClientFilesManagerP
         fileInputRef.current.value = "";
       }
     }
+  };
+
+  const handlePreview = async (file: ClientFile) => {
+    setPreviewFile(file);
+    setLoadingPreview(true);
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from("client-files")
+        .createSignedUrl(file.file_path, 3600); // URL válida por 1 hora
+
+      if (error) throw error;
+      
+      setPreviewUrl(data.signedUrl);
+    } catch (error) {
+      console.error("Error getting preview URL:", error);
+      toast.error("Error al cargar la vista previa");
+      setPreviewFile(null);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewFile(null);
+    setPreviewUrl(null);
   };
 
   const handleDownload = async (file: ClientFile) => {
@@ -248,6 +283,14 @@ export const ClientFilesManager = ({ clientId, clientName }: ClientFilesManagerP
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => handlePreview(file)}
+                      title="Ver"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleDownload(file)}
                       title="Descargar"
                     >
@@ -268,6 +311,31 @@ export const ClientFilesManager = ({ clientId, clientName }: ClientFilesManagerP
           ))}
         </div>
       )}
+
+      {/* PDF Preview Dialog */}
+      <Dialog open={!!previewFile} onOpenChange={closePreview}>
+        <DialogContent className="max-w-4xl h-[85vh] p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle className="flex items-center gap-2 pr-8">
+              <File className="w-5 h-5 text-red-600" />
+              <span className="truncate">{previewFile?.file_name}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 h-full min-h-0">
+            {loadingPreview ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : previewUrl ? (
+              <iframe
+                src={previewUrl}
+                className="w-full h-[calc(85vh-80px)] border-0"
+                title={previewFile?.file_name}
+              />
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
