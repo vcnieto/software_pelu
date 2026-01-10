@@ -5,9 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, User, Scissors, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar, Clock, User, Scissors, Check, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -37,6 +38,8 @@ const AppointmentFormDialog = ({
   const [professionals, setProfessionals] = useState<any[]>([]);
   const [existingAppointments, setExistingAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
   
   const [form, setForm] = useState({
     client_id: "",
@@ -58,6 +61,8 @@ const AppointmentFormDialog = ({
         start_time: "",
         notes: ""
       });
+      setClientSearch("");
+      setClientDropdownOpen(false);
       fetchData();
     }
   }, [open, initialDate]);
@@ -208,6 +213,18 @@ const AppointmentFormDialog = ({
 
   const selectedService = services.find(s => String(s.id) === form.service_id);
   const selectedProfessional = professionals.find(p => String(p.id) === form.professional_id);
+  const selectedClient = clients.find(c => String(c.id) === form.client_id);
+
+  // Filter clients based on search
+  const filteredClients = useMemo(() => {
+    if (!clientSearch.trim()) return clients;
+    const searchLower = clientSearch.toLowerCase();
+    return clients.filter(c => 
+      c.name.toLowerCase().includes(searchLower) ||
+      c.phone?.toLowerCase().includes(searchLower) ||
+      c.email?.toLowerCase().includes(searchLower)
+    );
+  }, [clients, clientSearch]);
 
   // Only show available slots when filtering.
   const filteredSlots = timeSlots.filter(s => s.available);
@@ -227,22 +244,86 @@ const AppointmentFormDialog = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-visible flex flex-col gap-4 pt-4">
-          {/* Client Selection */}
+          {/* Client Selection with Search */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Cliente *
             </Label>
-            <Select value={form.client_id || undefined} onValueChange={v => setForm({ ...form, client_id: v })}>
-              <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
-                <SelectValue placeholder="Seleccionar cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map(c => (
-                  <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={clientDropdownOpen} onOpenChange={setClientDropdownOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={clientDropdownOpen}
+                  className={cn(
+                    "w-full justify-between font-normal",
+                    !form.client_id && "text-muted-foreground"
+                  )}
+                >
+                  {selectedClient ? selectedClient.name : "Seleccionar cliente"}
+                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <div className="flex items-center border-b px-3">
+                  <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                  <input
+                    className="flex h-10 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
+                    placeholder="Buscar por nombre, teléfono o email..."
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                  />
+                  {clientSearch && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => setClientSearch("")}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="max-h-[200px] overflow-y-auto">
+                  {filteredClients.length === 0 ? (
+                    <div className="py-6 text-center text-sm text-muted-foreground">
+                      No se encontraron clientes
+                    </div>
+                  ) : (
+                    filteredClients.map((client) => (
+                      <div
+                        key={client.id}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent transition-colors",
+                          form.client_id === String(client.id) && "bg-accent"
+                        )}
+                        onClick={() => {
+                          setForm({ ...form, client_id: String(client.id) });
+                          setClientDropdownOpen(false);
+                          setClientSearch("");
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "h-4 w-4",
+                            form.client_id === String(client.id) ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{client.name}</p>
+                          {(client.phone || client.email) && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {client.phone || client.email}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Service Selection */}
