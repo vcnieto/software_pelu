@@ -60,8 +60,9 @@ const Clients = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Format date in local timezone to avoid UTC offset issues
     const birthDateString = form.birthDate
-      ? form.birthDate.toISOString().split("T")[0]
+      ? `${form.birthDate.getFullYear()}-${String(form.birthDate.getMonth() + 1).padStart(2, '0')}-${String(form.birthDate.getDate()).padStart(2, '0')}`
       : null;
     if (editing) {
       await supabase
@@ -173,11 +174,35 @@ const Clients = () => {
                           setForm({ ...form, birthDate: d || null });
                           setBirthDateOpen(false);
                         }}
-                        captionLayout="dropdown"
+                        captionLayout="dropdown-buttons"
                         fromYear={1940}
                         toYear={new Date().getFullYear()}
+                        defaultMonth={form.birthDate || new Date(2000, 0)}
                         initialFocus
-                        className={cn("p-3 pointer-events-auto")}
+                        className="p-3 pointer-events-auto"
+                        classNames={{
+                          caption: "flex justify-center pt-1 relative items-center gap-1",
+                          caption_label: "hidden",
+                          caption_dropdowns: "flex gap-2",
+                          dropdown: "appearance-none bg-background border border-input rounded-md px-2 py-1 text-sm font-medium cursor-pointer hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring",
+                          dropdown_month: "mr-1",
+                          dropdown_year: "",
+                          nav: "flex items-center gap-1",
+                          nav_button: "h-7 w-7 bg-transparent p-0 opacity-70 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-accent",
+                          nav_button_previous: "absolute left-1",
+                          nav_button_next: "absolute right-1",
+                          table: "w-full border-collapse",
+                          head_row: "flex",
+                          head_cell: "text-muted-foreground rounded-md w-9 font-medium text-[0.8rem]",
+                          row: "flex w-full mt-1",
+                          cell: "h-9 w-9 text-center text-sm p-0 relative",
+                          day: "h-9 w-9 p-0 font-normal rounded-md hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors",
+                          day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                          day_today: "bg-accent text-accent-foreground font-semibold",
+                          day_outside: "text-muted-foreground opacity-50",
+                          day_disabled: "text-muted-foreground opacity-50",
+                          day_hidden: "invisible",
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
@@ -265,7 +290,7 @@ const Clients = () => {
                         phone: client.phone || "",
                         email: client.email || "",
                         notes: client.notes || "",
-                        birthDate: client.birth_date ? new Date(client.birth_date) : null,
+                        birthDate: client.birth_date ? new Date(client.birth_date + "T00:00:00") : null,
                       });
                       setBirthDateOpen(false);
                       setOpen(true);
@@ -343,7 +368,7 @@ const Clients = () => {
                           <div className="flex items-center gap-2 text-sm">
                             <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                             <span>
-                              {format(new Date(selectedClient.birth_date), "d 'de' MMMM, yyyy", {
+                              {format(new Date(selectedClient.birth_date + "T00:00:00"), "d 'de' MMMM, yyyy", {
                                 locale: es,
                               })}
                             </span>
@@ -389,7 +414,7 @@ const Clients = () => {
                             phone: selectedClient.phone || "",
                             email: selectedClient.email || "",
                             notes: selectedClient.notes || "",
-                            birthDate: selectedClient.birth_date ? new Date(selectedClient.birth_date) : null,
+                            birthDate: selectedClient.birth_date ? new Date(selectedClient.birth_date + "T00:00:00") : null,
                           });
                           setBirthDateOpen(false);
                           setOpen(true);
