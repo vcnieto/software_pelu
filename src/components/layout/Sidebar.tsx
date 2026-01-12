@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBusinessSettings } from "@/contexts/BusinessContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import {
@@ -14,6 +15,7 @@ import {
   X,
   ChevronLeft,
   UserCircle,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +34,7 @@ interface SidebarProps {
 
 const Sidebar = ({ children }: SidebarProps) => {
   const { signOut, user } = useAuth();
+  const { settings } = useBusinessSettings();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -44,6 +47,9 @@ const Sidebar = ({ children }: SidebarProps) => {
     }
   }, [user]);
 
+  const businessName = settings?.business_name || "Salón";
+  const logoUrl = settings?.logo_url;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile header */}
@@ -55,8 +61,12 @@ const Sidebar = ({ children }: SidebarProps) => {
           <Menu className="w-6 h-6" />
         </button>
         <div className="flex items-center gap-2">
-          <Scissors className="w-5 h-5 text-primary" />
-          <span className="font-display font-semibold">Salón</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={businessName} className="w-8 h-8 rounded-lg object-cover" />
+          ) : (
+            <Scissors className="w-5 h-5 text-primary" />
+          )}
+          <span className="font-display font-semibold">{businessName}</span>
         </div>
         <div className="w-10" />
       </div>
@@ -80,12 +90,18 @@ const Sidebar = ({ children }: SidebarProps) => {
         {/* Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Scissors className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+              {logoUrl ? (
+                <img src={logoUrl} alt={businessName} className="w-full h-full object-cover" />
+              ) : (
+                <Scissors className="w-5 h-5 text-primary" />
+              )}
             </div>
             {!collapsed && (
               <div className="animate-fade-in">
-                <h1 className="font-display font-semibold text-sidebar-foreground">Salón</h1>
+                <h1 className="font-display font-semibold text-sidebar-foreground truncate max-w-[140px]">
+                  {businessName}
+                </h1>
                 <p className="text-xs text-muted-foreground">Gestión</p>
               </div>
             )}
@@ -119,6 +135,24 @@ const Sidebar = ({ children }: SidebarProps) => {
               </NavLink>
             );
           })}
+
+          {/* Separator */}
+          <div className="h-px bg-sidebar-border my-2" />
+
+          {/* Settings Link */}
+          <NavLink
+            to="/configuracion"
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+              location.pathname === "/configuracion"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
+            <Settings className={cn("w-5 h-5 shrink-0", collapsed && "mx-auto")} />
+            {!collapsed && <span className="font-medium">Configuración</span>}
+          </NavLink>
         </nav>
 
         {/* Footer */}

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { BusinessProvider } from "./contexts/BusinessContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -12,6 +13,7 @@ import Services from "./pages/Services";
 import Appointments from "./pages/Appointments";
 import CalendarView from "./pages/Calendar";
 import Professionals from "./pages/Professionals";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,22 +27,25 @@ const AuthRedirect = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<AuthRedirect />} />
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/profesionales" element={<ProtectedRoute><Professionals /></ProtectedRoute>} />
-            <Route path="/clientes" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
-            <Route path="/servicios" element={<ProtectedRoute><Services /></ProtectedRoute>} />
-            <Route path="/citas" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-            <Route path="/calendario" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <BusinessProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<AuthRedirect />} />
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/profesionales" element={<ProtectedRoute><Professionals /></ProtectedRoute>} />
+              <Route path="/clientes" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
+              <Route path="/servicios" element={<ProtectedRoute><Services /></ProtectedRoute>} />
+              <Route path="/citas" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+              <Route path="/calendario" element={<ProtectedRoute><CalendarView /></ProtectedRoute>} />
+              <Route path="/configuracion" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </BusinessProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
