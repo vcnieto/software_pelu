@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,12 +25,43 @@ interface Appointment {
 
 const DEFAULT_COLOR = "#8B5CF6";
 
+// Shared utility to group overlapping appointments
+const getOverlappingGroups = (appts: Appointment[]) => {
+  const groups: Appointment[][] = [];
+  const sorted = [...appts].sort((a, b) => a.start_time.localeCompare(b.start_time));
+  
+  sorted.forEach(apt => {
+    const [h, m] = apt.start_time.split(":").map(Number);
+    const aptStart = h * 60 + m;
+    const aptEnd = aptStart + apt.duration;
+    
+    let addedToGroup = false;
+    for (const group of groups) {
+      const overlaps = group.some(existing => {
+        const [eh, em] = existing.start_time.split(":").map(Number);
+        const existingStart = eh * 60 + em;
+        const existingEnd = existingStart + existing.duration;
+        return aptStart < existingEnd && aptEnd > existingStart;
+      });
+      if (overlaps) {
+        group.push(apt);
+        addedToGroup = true;
+        break;
+      }
+    }
+    if (!addedToGroup) {
+      groups.push([apt]);
+    }
+  });
+  return groups;
+};
+
 const CalendarView = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [view, setView] = useState<"month" | "week" | "day" | "list">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   
@@ -47,32 +79,32 @@ const CalendarView = () => {
   }).slice(0, 42);
   const hours = Array.from({ length: 14 }, (_, i) => i + 6); // 6:00 to 19:00
 
-  useEffect(() => { 
-    if (user) { 
-      fetchAppointments(); 
-    } 
-  }, [user, currentDate, view]);
-
-  const fetchAppointments = async () => {
-    let start: string, end: string;
+  // Compute date range for query
+  const dateRange = (() => {
     if (view === "day") {
-      start = end = format(currentDate, "yyyy-MM-dd");
+      const d = format(currentDate, "yyyy-MM-dd");
+      return { start: d, end: d };
     } else if (view === "week") {
-      start = format(weekStart, "yyyy-MM-dd");
-      end = format(addDays(weekStart, 6), "yyyy-MM-dd");
-    } else {
-      start = format(monthDays[0], "yyyy-MM-dd");
-      end = format(monthDays[monthDays.length - 1], "yyyy-MM-dd");
+      return { start: format(weekStart, "yyyy-MM-dd"), end: format(addDays(weekStart, 6), "yyyy-MM-dd") };
     }
-    const { data } = await supabase
-      .from("appointments")
-      .select("*, clients(name), services(name, duration, price), professionals(name, specialty, color)")
-      .gte("date", start)
-      .lte("date", end)
-      .order("date")
-      .order("start_time");
-    setAppointments(data || []);
-  };
+    return { start: format(monthDays[0], "yyyy-MM-dd"), end: format(monthDays[monthDays.length - 1], "yyyy-MM-dd") };
+  })();
+
+  const { data: appointments = [] } = useQuery({
+    queryKey: ["calendar-appointments", dateRange.start, dateRange.end],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*, clients(name), services(name, duration, price), professionals(name, specialty, color)")
+        .gte("date", dateRange.start)
+        .lte("date", dateRange.end)
+        .order("date")
+        .order("start_time");
+      if (error) throw error;
+      return (data || []) as Appointment[];
+    },
+    enabled: !!user,
+  });
 
   const getProfessionalColor = (professional: { color?: string } | null) => {
     return professional?.color || DEFAULT_COLOR;
@@ -356,38 +388,6 @@ const CalendarView = () => {
                         {/* Day columns with appointments */}
                         {weekDays.map(day => {
                           const dayAppts = getAppointmentsForDay(day);
-                          
-                          // Group overlapping appointments
-                          const getOverlappingGroups = (appts: Appointment[]) => {
-                            const groups: Appointment[][] = [];
-                            const sorted = [...appts].sort((a, b) => a.start_time.localeCompare(b.start_time));
-                            
-                            sorted.forEach(apt => {
-                              const [h, m] = apt.start_time.split(":").map(Number);
-                              const aptStart = h * 60 + m;
-                              const aptEnd = aptStart + apt.duration;
-                              
-                              let addedToGroup = false;
-                              for (const group of groups) {
-                                const overlaps = group.some(existing => {
-                                  const [eh, em] = existing.start_time.split(":").map(Number);
-                                  const existingStart = eh * 60 + em;
-                                  const existingEnd = existingStart + existing.duration;
-                                  return aptStart < existingEnd && aptEnd > existingStart;
-                                });
-                                if (overlaps) {
-                                  group.push(apt);
-                                  addedToGroup = true;
-                                  break;
-                                }
-                              }
-                              if (!addedToGroup) {
-                                groups.push([apt]);
-                              }
-                            });
-                            return groups;
-                          };
-                          
                           const groups = getOverlappingGroups(dayAppts);
                           
                           return (
@@ -496,38 +496,6 @@ const CalendarView = () => {
                           {/* Appointments */}
                           {(() => {
                             const dayAppts = getAppointmentsForDay(currentDate);
-                            
-                            // Group overlapping appointments
-                            const getOverlappingGroups = (appts: Appointment[]) => {
-                              const groups: Appointment[][] = [];
-                              const sorted = [...appts].sort((a, b) => a.start_time.localeCompare(b.start_time));
-                              
-                              sorted.forEach(apt => {
-                                const [h, m] = apt.start_time.split(":").map(Number);
-                                const aptStart = h * 60 + m;
-                                const aptEnd = aptStart + apt.duration;
-                                
-                                let addedToGroup = false;
-                                for (const group of groups) {
-                                  const overlaps = group.some(existing => {
-                                    const [eh, em] = existing.start_time.split(":").map(Number);
-                                    const existingStart = eh * 60 + em;
-                                    const existingEnd = existingStart + existing.duration;
-                                    return aptStart < existingEnd && aptEnd > existingStart;
-                                  });
-                                  if (overlaps) {
-                                    group.push(apt);
-                                    addedToGroup = true;
-                                    break;
-                                  }
-                                }
-                                if (!addedToGroup) {
-                                  groups.push([apt]);
-                                }
-                              });
-                              return groups;
-                            };
-                            
                             const groups = getOverlappingGroups(dayAppts);
                             
                             return groups.flatMap(group => 
@@ -736,7 +704,10 @@ const CalendarView = () => {
         open={appointmentFormOpen}
         onOpenChange={setAppointmentFormOpen}
         initialDate={appointmentFormDate}
-        onSuccess={fetchAppointments}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["calendar-appointments"] });
+          queryClient.invalidateQueries({ queryKey: ["appointments"] });
+        }}
       />
     </Sidebar>
   );

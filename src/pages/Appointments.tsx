@@ -1,40 +1,29 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useMemo } from "react";
+import { useAppointments, useInvalidateAppointments, type AppointmentWithRelations } from "@/hooks/useAppointments";
 import Sidebar from "@/components/layout/Sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Clock, Calendar, UserCircle } from "lucide-react";
+import { Plus, Trash2, Clock, Calendar, UserCircle } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { es } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
 import AppointmentFormDialog from "@/components/appointments/AppointmentFormDialog";
 
 const Appointments = () => {
-  const { user } = useAuth();
-  const [appointments, setAppointments] = useState<any[]>([]);
   const [formOpen, setFormOpen] = useState(false);
+  const invalidateAppointments = useInvalidateAppointments();
 
-  useEffect(() => { 
-    if (user) { 
-      fetchAppointments(); 
-    } 
-  }, [user]);
-
-  const fetchAppointments = async () => {
-    const { data } = await supabase
-      .from("appointments")
-      .select("*, clients(name), services(name, duration, price), professionals(name, specialty)")
-      .order("date", { ascending: false })
-      .order("start_time");
-    setAppointments(data || []);
-  };
+  // Only load last 60 days of appointments
+  const dateFrom = useMemo(() => format(subDays(new Date(), 60), "yyyy-MM-dd"), []);
+  const { data: appointments = [], isLoading } = useAppointments({ dateFrom });
 
   const handleDelete = async (id: string) => {
-    if (confirm("¿Eliminar esta cita?")) { 
-      await supabase.from("appointments").delete().eq("id", id); 
-      toast.success("Cita eliminada"); 
-      fetchAppointments(); 
+    if (confirm("¿Eliminar esta cita?")) {
+      const { error } = await supabase.from("appointments").delete().eq("id", id);
+      if (error) { toast.error("Error al eliminar la cita"); return; }
+      toast.success("Cita eliminada");
+      invalidateAppointments();
     }
   };
 
@@ -61,6 +50,11 @@ const Appointments = () => {
         </div>
         
         <div className="space-y-3">
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          )}
           {appointments.map(apt => (
             <Card key={apt.id} className="card-hover">
               <CardContent className="p-4 flex items-center justify-between">
@@ -70,7 +64,7 @@ const Appointments = () => {
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      {format(new Date(apt.date), "d MMM yyyy", { locale: es })}
+                      {format(new Date(apt.date + "T00:00:00"), "d MMM yyyy", { locale: es })}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
@@ -96,7 +90,7 @@ const Appointments = () => {
               </CardContent>
             </Card>
           ))}
-          {appointments.length === 0 && (
+          {!isLoading && appointments.length === 0 && (
             <div className="text-center py-12">
               <Calendar className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
               <p className="text-muted-foreground">No hay citas</p>
@@ -116,7 +110,7 @@ const Appointments = () => {
       <AppointmentFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
-        onSuccess={fetchAppointments}
+        onSuccess={invalidateAppointments}
       />
     </Sidebar>
   );
