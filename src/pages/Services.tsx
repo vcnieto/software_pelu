@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { useServices, useServiceMutations } from "@/hooks/useServices";
 import Sidebar from "@/components/layout/Sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,41 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Clock, Euro } from "lucide-react";
-import { toast } from "sonner";
-
-interface Service { id: string; name: string; duration: number; price: number; }
+import type { Service } from "@/hooks/useServices";
 
 const Services = () => {
-  const { user } = useAuth();
-  const [services, setServices] = useState<Service[]>([]);
+  const { data: services = [], isLoading } = useServices();
+  const { createService, updateService, deleteService } = useServiceMutations();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
   const [form, setForm] = useState({ name: "", duration: "30", price: "0" });
-
-  useEffect(() => { if (user) fetchServices(); }, [user]);
-
-  const fetchServices = async () => {
-    const { data } = await supabase.from("services").select("*").order("name");
-    setServices(data || []);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = { name: form.name, duration: parseInt(form.duration), price: parseFloat(form.price) };
     if (editing) {
-      await supabase.from("services").update(payload).eq("id", editing.id);
-      toast.success("Servicio actualizado");
+      await updateService.mutateAsync({ id: editing.id, ...payload });
     } else {
-      await supabase.from("services").insert({ ...payload, user_id: user!.id });
-      toast.success("Servicio añadido");
+      await createService.mutateAsync(payload);
     }
-    setOpen(false); setEditing(null); setForm({ name: "", duration: "30", price: "0" }); fetchServices();
+    setOpen(false); setEditing(null); setForm({ name: "", duration: "30", price: "0" });
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("¿Eliminar este servicio?")) {
-      await supabase.from("services").delete().eq("id", id);
-      toast.success("Servicio eliminado"); fetchServices();
+      await deleteService.mutateAsync(id);
     }
   };
 
@@ -59,12 +46,15 @@ const Services = () => {
                 <div><Label>Nombre *</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} required /></div>
                 <div><Label>Duración (minutos) *</Label><Input type="number" min="5" value={form.duration} onChange={e => setForm({...form, duration: e.target.value})} required /></div>
                 <div><Label>Precio (€) *</Label><Input type="number" min="0" step="0.01" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required /></div>
-                <Button type="submit" className="w-full btn-primary-gradient">{editing ? "Guardar" : "Añadir"}</Button>
+                <Button type="submit" className="w-full btn-primary-gradient" disabled={createService.isPending || updateService.isPending}>
+                  {editing ? "Guardar" : "Añadir"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading && <p className="text-center text-muted-foreground py-8 col-span-full">Cargando...</p>}
           {services.map(service => (
             <Card key={service.id} className="card-hover">
               <CardContent className="p-4">
@@ -82,7 +72,7 @@ const Services = () => {
               </CardContent>
             </Card>
           ))}
-          {services.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">No hay servicios</p>}
+          {!isLoading && services.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">No hay servicios</p>}
         </div>
       </div>
     </Sidebar>

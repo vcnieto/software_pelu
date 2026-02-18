@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import {
   Euro,
   Sparkles,
 } from "lucide-react";
-import { format, isToday, parseISO, startOfWeek, endOfWeek } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { es } from "date-fns/locale";
 import AppointmentFormDialog from "@/components/appointments/AppointmentFormDialog";
 
@@ -34,25 +35,9 @@ interface Appointment {
   professionals: { name: string; color: string | null } | null;
 }
 
-interface Stats {
-  totalClients: number;
-  totalServices: number;
-  todayAppointments: number;
-  weekAppointments: number;
-  todayRevenue: number;
-}
-
 const Dashboard = () => {
   const { user } = useAuth();
-  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
-  const [stats, setStats] = useState<Stats>({
-    totalClients: 0,
-    totalServices: 0,
-    todayAppointments: 0,
-    weekAppointments: 0,
-    todayRevenue: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [openNewAppointment, setOpenNewAppointment] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -65,63 +50,56 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
-
-  const fetchData = async () => {
-    try {
-      const { data: appointments } = await supabase
+  const { data: todayAppointments = [], isLoading } = useQuery({
+    queryKey: ["dashboard-today", today],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from("appointments")
-        .select(`
-          id,
-          date,
-          start_time,
-          duration,
-          notes,
-          status,
-          clients (name),
-          services (name, price),
-          professionals (name, color)
-        `)
+        .select("id, date, start_time, duration, notes, status, clients(name), services(name, price), professionals(name, color)")
         .eq("date", today)
         .order("start_time", { ascending: true });
+      if (error) throw error;
+      return (data || []) as Appointment[];
+    },
+    enabled: !!user,
+  });
 
-      setTodayAppointments(appointments || []);
-
-      const [clientsResult, servicesResult, weekResult] = await Promise.all([
+  const { data: counts } = useQuery({
+    queryKey: ["dashboard-counts", weekStart, weekEnd],
+    queryFn: async () => {
+      const [clientsRes, servicesRes, weekRes] = await Promise.all([
         supabase.from("clients").select("id", { count: "exact", head: true }),
         supabase.from("services").select("id", { count: "exact", head: true }),
-        supabase
-          .from("appointments")
-          .select("id, services(price)")
-          .gte("date", weekStart)
-          .lte("date", weekEnd),
+        supabase.from("appointments").select("id").gte("date", weekStart).lte("date", weekEnd),
       ]);
+      return {
+        totalClients: clientsRes.count || 0,
+        totalServices: servicesRes.count || 0,
+        weekAppointments: weekRes.data?.length || 0,
+      };
+    },
+    enabled: !!user,
+  });
 
-      const todayRevenue = appointments?.reduce((sum, apt) => {
-        return sum + (apt.services?.price || 0);
-      }, 0) || 0;
+  const stats = useMemo(() => ({
+    totalClients: counts?.totalClients || 0,
+    totalServices: counts?.totalServices || 0,
+    todayAppointments: todayAppointments.length,
+    weekAppointments: counts?.weekAppointments || 0,
+    todayRevenue: todayAppointments.reduce((sum, apt) => sum + (apt.services?.price || 0), 0),
+  }), [todayAppointments, counts]);
 
-      setStats({
-        totalClients: clientsResult.count || 0,
-        totalServices: servicesResult.count || 0,
-        todayAppointments: appointments?.length || 0,
-        weekAppointments: weekResult.data?.length || 0,
-        todayRevenue,
-      });
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const completedCount = useMemo(() =>
+    todayAppointments.filter(apt => getAppointmentStatus(apt.start_time, apt.duration, currentTime) === "completada").length,
+    [todayAppointments, currentTime]
+  );
 
-  const formatTime = (time: string) => {
-    return time.slice(0, 5);
-  };
+  const pendingCount = useMemo(() =>
+    todayAppointments.filter(apt => getAppointmentStatus(apt.start_time, apt.duration, currentTime) === "pendiente").length,
+    [todayAppointments, currentTime]
+  );
+
+  const formatTime = (time: string) => time.slice(0, 5);
 
   const getEndTime = (startTime: string, duration: number) => {
     const [hours, minutes] = startTime.split(":").map(Number);
@@ -129,23 +107,6 @@ const Dashboard = () => {
     const endHours = Math.floor(endMinutes / 60);
     const endMins = endMinutes % 60;
     return `${endHours.toString().padStart(2, "0")}:${endMins.toString().padStart(2, "0")}`;
-  };
-
-  const getAppointmentStatus = (startTime: string, duration: number) => {
-    const now = currentTime;
-    const [hours, minutes] = startTime.split(":").map(Number);
-    const appointmentStart = new Date();
-    appointmentStart.setHours(hours, minutes, 0, 0);
-    
-    const appointmentEnd = new Date(appointmentStart);
-    appointmentEnd.setMinutes(appointmentEnd.getMinutes() + duration);
-
-    if (now >= appointmentStart && now <= appointmentEnd) {
-      return "en-curso";
-    } else if (now > appointmentEnd) {
-      return "completada";
-    }
-    return "pendiente";
   };
 
   const getGreeting = () => {
@@ -161,6 +122,12 @@ const Dashboard = () => {
     appointmentTime.setHours(hours, minutes, 0, 0);
     return appointmentTime > currentTime;
   });
+
+  const handleSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["dashboard-today"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    queryClient.invalidateQueries({ queryKey: ["appointments"] });
+  };
 
   return (
     <Sidebar>
@@ -238,9 +205,7 @@ const Dashboard = () => {
             <CardContent className="p-4 lg:p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-3xl lg:text-4xl font-display font-bold text-primary">
-                    {stats.todayAppointments}
-                  </p>
+                  <p className="text-3xl lg:text-4xl font-display font-bold text-primary">{stats.todayAppointments}</p>
                   <p className="text-sm text-muted-foreground mt-1">Citas hoy</p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -254,9 +219,7 @@ const Dashboard = () => {
             <CardContent className="p-4 lg:p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-3xl lg:text-4xl font-display font-bold text-foreground">
-                    {stats.weekAppointments}
-                  </p>
+                  <p className="text-3xl lg:text-4xl font-display font-bold text-foreground">{stats.weekAppointments}</p>
                   <p className="text-sm text-muted-foreground mt-1">Esta semana</p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -270,9 +233,7 @@ const Dashboard = () => {
             <CardContent className="p-4 lg:p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-3xl lg:text-4xl font-display font-bold text-foreground">
-                    {stats.totalClients}
-                  </p>
+                  <p className="text-3xl lg:text-4xl font-display font-bold text-foreground">{stats.totalClients}</p>
                   <p className="text-sm text-muted-foreground mt-1">Clientes</p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-sage flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -286,9 +247,7 @@ const Dashboard = () => {
             <CardContent className="p-4 lg:p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-3xl lg:text-4xl font-display font-bold text-foreground">
-                    {stats.todayRevenue.toFixed(0)}€
-                  </p>
+                  <p className="text-3xl lg:text-4xl font-display font-bold text-foreground">{stats.todayRevenue.toFixed(0)}€</p>
                   <p className="text-sm text-muted-foreground mt-1">Ingresos hoy</p>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -301,7 +260,7 @@ const Dashboard = () => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Citas de hoy - columna principal */}
+          {/* Citas de hoy */}
           <Card className="lg:col-span-2 glass-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg font-display flex items-center gap-2">
@@ -316,7 +275,7 @@ const Dashboard = () => {
               </Link>
             </CardHeader>
             <CardContent className="pt-0">
-              {loading ? (
+              {isLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
                 </div>
@@ -326,11 +285,7 @@ const Dashboard = () => {
                     <CalendarDays className="w-8 h-8 text-muted-foreground/50" />
                   </div>
                   <p className="text-muted-foreground mb-4">No hay citas programadas para hoy</p>
-                  <Button 
-                    variant="outline" 
-                    className="gap-2" 
-                    onClick={() => setOpenNewAppointment(true)}
-                  >
+                  <Button variant="outline" className="gap-2" onClick={() => setOpenNewAppointment(true)}>
                     <Plus className="w-4 h-4" />
                     Agendar primera cita
                   </Button>
@@ -338,7 +293,7 @@ const Dashboard = () => {
               ) : (
                 <div className="space-y-2">
                   {todayAppointments.map((appointment, index) => {
-                    const status = getAppointmentStatus(appointment.start_time, appointment.duration);
+                    const status = getAppointmentStatus(appointment.start_time, appointment.duration, currentTime);
                     return (
                       <div
                         key={appointment.id}
@@ -448,19 +403,11 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center justify-between py-2 border-b border-border/50">
                   <span className="text-sm text-muted-foreground">Citas completadas</span>
-                  <span className="font-medium">
-                    {todayAppointments.filter(apt => 
-                      getAppointmentStatus(apt.start_time, apt.duration) === "completada"
-                    ).length}
-                  </span>
+                  <span className="font-medium">{completedCount}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-sm text-muted-foreground">Citas pendientes</span>
-                  <span className="font-medium">
-                    {todayAppointments.filter(apt => 
-                      getAppointmentStatus(apt.start_time, apt.duration) === "pendiente"
-                    ).length}
-                  </span>
+                  <span className="font-medium">{pendingCount}</span>
                 </div>
               </CardContent>
             </Card>
@@ -471,10 +418,22 @@ const Dashboard = () => {
       <AppointmentFormDialog
         open={openNewAppointment}
         onOpenChange={setOpenNewAppointment}
-        onSuccess={fetchData}
+        onSuccess={handleSuccess}
       />
     </Sidebar>
   );
 };
+
+function getAppointmentStatus(startTime: string, duration: number, now: Date) {
+  const [hours, minutes] = startTime.split(":").map(Number);
+  const appointmentStart = new Date();
+  appointmentStart.setHours(hours, minutes, 0, 0);
+  const appointmentEnd = new Date(appointmentStart);
+  appointmentEnd.setMinutes(appointmentEnd.getMinutes() + duration);
+
+  if (now >= appointmentStart && now <= appointmentEnd) return "en-curso";
+  if (now > appointmentEnd) return "completada";
+  return "pendiente";
+}
 
 export default Dashboard;

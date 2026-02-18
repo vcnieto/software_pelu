@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { useProfessionals, useProfessionalMutations, type Professional } from "@/hooks/useProfessionals";
 import Sidebar from "@/components/layout/Sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Pencil, Trash2, UserCircle, Palette } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, Pencil, Trash2, UserCircle } from "lucide-react";
 
 const PRESET_COLORS = [
   "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", 
@@ -17,38 +15,25 @@ const PRESET_COLORS = [
 ];
 
 const Professionals = () => {
-  const { user } = useAuth();
-  const [professionals, setProfessionals] = useState<any[]>([]);
+  const { data: professionals = [], isLoading } = useProfessionals();
+  const { createProfessional, updateProfessional, deleteProfessional } = useProfessionalMutations();
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [editing, setEditing] = useState<Professional | null>(null);
   const [form, setForm] = useState({ name: "", specialty: "", color: "#8B5CF6" });
-
-  useEffect(() => { if (user) fetchProfessionals(); }, [user]);
-
-  const fetchProfessionals = async () => {
-    const { data } = await supabase.from("professionals").select("*").order("name");
-    setProfessionals(data || []);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editing) {
-      const { error } = await supabase.from("professionals").update(form).eq("id", editing.id);
-      if (error) { toast.error("Error al actualizar"); return; }
-      toast.success("Profesional actualizado");
+      await updateProfessional.mutateAsync({ id: editing.id, ...form });
     } else {
-      const { error } = await supabase.from("professionals").insert({ ...form, user_id: user!.id });
-      if (error) { toast.error("Error al crear"); return; }
-      toast.success("Profesional creado");
+      await createProfessional.mutateAsync(form);
     }
-    setOpen(false); setEditing(null); setForm({ name: "", specialty: "", color: "#8B5CF6" }); fetchProfessionals();
+    setOpen(false); setEditing(null); setForm({ name: "", specialty: "", color: "#8B5CF6" });
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("¿Eliminar este profesional?")) {
-      const { error } = await supabase.from("professionals").delete().eq("id", id);
-      if (error) { toast.error("Error al eliminar"); return; }
-      toast.success("Profesional eliminado"); fetchProfessionals();
+      await deleteProfessional.mutateAsync(id);
     }
   };
 
@@ -57,7 +42,7 @@ const Professionals = () => {
       <div className="p-6 lg:p-8 space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-3xl font-display font-semibold">Profesionales</h1>
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm({ name: "", specialty: "", color: "#8B5CF6" }); } }}>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm({ name: "", specialty: "", color: "#8B5CF6" }); } }}>
             <DialogTrigger asChild><Button className="btn-primary-gradient gap-2"><Plus className="w-4 h-4" />Nuevo Profesional</Button></DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>{editing ? "Editar" : "Nuevo"} Profesional</DialogTitle></DialogHeader>
@@ -88,12 +73,15 @@ const Professionals = () => {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <Button type="submit" className="w-full btn-primary-gradient">{editing ? "Guardar" : "Crear"}</Button>
+                <Button type="submit" className="w-full btn-primary-gradient" disabled={createProfessional.isPending || updateProfessional.isPending}>
+                  {editing ? "Guardar" : "Crear"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading && <p className="text-center text-muted-foreground py-8 col-span-full">Cargando...</p>}
           {professionals.map(pro => (
             <Card key={pro.id} className="card-hover">
               <CardContent className="p-4">
@@ -118,7 +106,7 @@ const Professionals = () => {
               </CardContent>
             </Card>
           ))}
-          {professionals.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">No hay profesionales</p>}
+          {!isLoading && professionals.length === 0 && <p className="text-center text-muted-foreground py-8 col-span-full">No hay profesionales</p>}
         </div>
       </div>
     </Sidebar>

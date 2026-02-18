@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useClients, useClientMutations, type Client } from "@/hooks/useClients";
 import Sidebar from "@/components/layout/Sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,6 @@ import { Plus, Pencil, Trash2, Phone, Mail, Search, User, FileText, CalendarIcon
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import BodyTreatmentCards from "@/components/clients/BodyTreatmentCards";
 import FacialSkinCards from "@/components/clients/FacialSkinCards";
 import AestheticHistoryCards from "@/components/clients/AestheticHistoryCards";
@@ -29,18 +29,10 @@ import MakeupProfessionalCards from "@/components/clients/MakeupProfessionalCard
 import { ClientAppointmentsHistory } from "@/components/clients/ClientAppointmentsHistory";
 import { ClientFilesManager } from "@/components/clients/ClientFilesManager";
 
-interface Client {
-  id: string;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  notes: string | null;
-  birth_date?: string | null;
-}
-
 const Clients = () => {
   const { user } = useAuth();
-  const [clients, setClients] = useState<Client[]>([]);
+  const { data: clients = [], isLoading } = useClients();
+  const { createClient, updateClient, deleteClient } = useClientMutations();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
@@ -49,55 +41,31 @@ const Clients = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [birthDateOpen, setBirthDateOpen] = useState(false);
 
-  useEffect(() => {
-    if (user) fetchClients();
-  }, [user]);
-
-  const fetchClients = async () => {
-    const { data } = await supabase.from("clients").select("*").order("name");
-    setClients(data || []);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Format date in local timezone to avoid UTC offset issues
     const birthDateString = form.birthDate
       ? `${form.birthDate.getFullYear()}-${String(form.birthDate.getMonth() + 1).padStart(2, '0')}-${String(form.birthDate.getDate()).padStart(2, '0')}`
       : null;
+    const payload = {
+      name: form.name,
+      phone: form.phone || null,
+      email: form.email || null,
+      notes: form.notes || null,
+      birth_date: birthDateString,
+    };
     if (editing) {
-      await supabase
-        .from("clients")
-        .update({
-          name: form.name,
-          phone: form.phone || null,
-          email: form.email || null,
-          notes: form.notes || null,
-          birth_date: birthDateString,
-        })
-        .eq("id", editing.id);
-      toast.success("Cliente actualizado");
+      await updateClient.mutateAsync({ id: editing.id, ...payload });
     } else {
-      await supabase.from("clients").insert({
-        user_id: user!.id,
-        name: form.name,
-        phone: form.phone || null,
-        email: form.email || null,
-        notes: form.notes || null,
-        birth_date: birthDateString,
-      });
-      toast.success("Cliente añadido");
+      await createClient.mutateAsync(payload);
     }
     setOpen(false);
     setEditing(null);
     setForm({ name: "", phone: "", email: "", notes: "", birthDate: null });
-    fetchClients();
   };
 
   const handleDelete = async (id: string) => {
     if (confirm("¿Eliminar este cliente? Se eliminarán también todas sus fichas.")) {
-      await supabase.from("clients").delete().eq("id", id);
-      toast.success("Cliente eliminado");
-      fetchClients();
+      await deleteClient.mutateAsync(id);
       if (selectedClient?.id === id) {
         setProfileOpen(false);
         setSelectedClient(null);
@@ -229,7 +197,7 @@ const Clients = () => {
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   />
                 </div>
-                <Button type="submit" className="w-full btn-primary-gradient">
+                <Button type="submit" className="w-full btn-primary-gradient" disabled={createClient.isPending || updateClient.isPending}>
                   {editing ? "Guardar" : "Añadir"}
                 </Button>
               </form>
@@ -248,6 +216,11 @@ const Clients = () => {
         </div>
 
         <div className="grid gap-4">
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          )}
           {filtered.map((client) => (
             <Card key={client.id} className="card-hover">
               <CardContent className="p-4 flex items-center justify-between">
@@ -309,7 +282,7 @@ const Clients = () => {
               </CardContent>
             </Card>
           ))}
-          {filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <p className="text-center text-muted-foreground py-8">No hay clientes</p>
           )}
         </div>
@@ -399,107 +372,32 @@ const Clients = () => {
                         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                           Notas
                         </h3>
-                        <p className="text-sm">{selectedClient.notes}</p>
+                        <p className="text-sm bg-muted/50 rounded-lg p-3">{selectedClient.notes}</p>
                       </div>
                     )}
-
-                    <div className="pt-4">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                          setEditing(selectedClient);
-                          setForm({
-                            name: selectedClient.name,
-                            phone: selectedClient.phone || "",
-                            email: selectedClient.email || "",
-                            notes: selectedClient.notes || "",
-                            birthDate: selectedClient.birth_date ? new Date(selectedClient.birth_date + "T00:00:00") : null,
-                          });
-                          setBirthDateOpen(false);
-                          setOpen(true);
-                        }}
-                      >
-                        <Pencil className="w-4 h-4 mr-2" />
-                        Editar datos del cliente
-                      </Button>
-                    </div>
                   </TabsContent>
 
-                  {/* Fichas */}
+                  {/* Fichas Técnicas */}
                   <TabsContent value="fichas" className="mt-0 space-y-6">
-                    <AestheticHistoryCards
-                      clientId={selectedClient.id}
-                      clientName={selectedClient.name}
-                      clientPhone={selectedClient.phone}
-                      clientEmail={selectedClient.email}
-                      clientBirthDate={selectedClient.birth_date}
-                    />
-
-                    <div className="pt-4 border-t">
-                      <VisagismCards
-                        clientId={selectedClient.id}
-                        clientName={selectedClient.name}
-                        clientPhone={selectedClient.phone}
-                        clientEmail={selectedClient.email}
-                      />
-                    </div>
-
-                    <div className="pt-4 border-t">
-                      <MakeupProfessionalCards
-                        clientId={selectedClient.id}
-                        clientName={selectedClient.name}
-                        clientPhone={selectedClient.phone}
-                        clientEmail={selectedClient.email}
-                      />
-                    </div>
-                    
-                    <div className="pt-4 border-t">
-                      <BodyTreatmentCards
-                        clientId={selectedClient.id}
-                        clientName={selectedClient.name}
-                      />
-                    </div>
-                    
-                    <div className="pt-4 border-t">
-                      <FacialSkinCards
-                        clientId={selectedClient.id}
-                        clientName={selectedClient.name}
-                      />
-                    </div>
-                    
-                    <div className="pt-4 border-t">
-                      <MassageDlmCards clientId={selectedClient.id} />
-                    </div>
-                    
-                    <div className="pt-4 border-t">
-                      <EyelashEyebrowCards clientId={selectedClient.id} />
-                    </div>
-                    
-                    <div className="pt-4 border-t">
-                      <WaxingTreatmentCards clientId={selectedClient.id} />
-                    </div>
-                    
-                    <div className="pt-4 border-t">
-                      <HairScalpCards
-                        clientId={selectedClient.id}
-                        clientPhone={selectedClient.phone}
-                        clientEmail={selectedClient.email}
-                      />
-                    </div>
+                    <AestheticHistoryCards clientId={selectedClient.id} clientName={selectedClient.name} />
+                    <FacialSkinCards clientId={selectedClient.id} clientName={selectedClient.name} />
+                    <BodyTreatmentCards clientId={selectedClient.id} clientName={selectedClient.name} />
+                    <MassageDlmCards clientId={selectedClient.id} />
+                    <EyelashEyebrowCards clientId={selectedClient.id} />
+                    <WaxingTreatmentCards clientId={selectedClient.id} />
+                    <HairScalpCards clientId={selectedClient.id} />
+                    <VisagismCards clientId={selectedClient.id} clientName={selectedClient.name} />
+                    <MakeupProfessionalCards clientId={selectedClient.id} clientName={selectedClient.name} />
                   </TabsContent>
 
-                  {/* Citas */}
+                  {/* Historial de Citas */}
                   <TabsContent value="citas" className="mt-0">
                     <ClientAppointmentsHistory clientId={selectedClient.id} />
                   </TabsContent>
 
                   {/* Archivos */}
                   <TabsContent value="archivos" className="mt-0">
-                    <ClientFilesManager 
-                      clientId={selectedClient.id} 
-                      clientName={selectedClient.name} 
-                    />
+                    <ClientFilesManager clientId={selectedClient.id} clientName={selectedClient.name} />
                   </TabsContent>
                 </div>
               </Tabs>

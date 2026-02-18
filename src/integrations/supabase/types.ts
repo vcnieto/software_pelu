@@ -368,6 +368,75 @@ export type Database = {
           },
         ]
       }
+      business_settings: {
+        Row: {
+          accent_color: string | null
+          address: string | null
+          business_name: string
+          closing_time: string | null
+          color_palette: string | null
+          created_at: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          opening_time: string | null
+          phone: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_expires_at: string | null
+          subscription_tier: string
+          updated_at: string
+          user_id: string
+          working_days: string[] | null
+        }
+        Insert: {
+          accent_color?: string | null
+          address?: string | null
+          business_name?: string
+          closing_time?: string | null
+          color_palette?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          opening_time?: string | null
+          phone?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_tier?: string
+          updated_at?: string
+          user_id: string
+          working_days?: string[] | null
+        }
+        Update: {
+          accent_color?: string | null
+          address?: string | null
+          business_name?: string
+          closing_time?: string | null
+          color_palette?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          opening_time?: string | null
+          phone?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_tier?: string
+          updated_at?: string
+          user_id?: string
+          working_days?: string[] | null
+        }
+        Relationships: []
+      }
       cards: {
         Row: {
           allergies: string | null
