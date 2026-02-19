@@ -98,13 +98,19 @@ const AppointmentFormDialog = ({
   const getWorkingHours = () => {
     if (!form.professional_id || !form.date) return null;
     const professional = professionals.find(p => String(p.id) === form.professional_id);
-    if (!professional?.working_hours) return null;
     
     const selectedDate = new Date(form.date + "T12:00:00");
-    const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const dayOfWeek = selectedDate.getDay();
     
-    const dayHours = professional.working_hours[String(dayOfWeek)];
-    return dayHours || null; // null means closed
+    // If professional has no working_hours configured (empty or null), 
+    // return default hours so they're not marked as "closed"
+    const wh = professional?.working_hours as Record<string, any> | null;
+    if (!wh || Object.keys(wh).length === 0) {
+      return { start: "09:00", end: "20:00" }; // Default working hours
+    }
+    
+    const dayHours = wh[String(dayOfWeek)];
+    return dayHours || null; // null means explicitly closed for this day
   };
 
   // Generate available time slots
