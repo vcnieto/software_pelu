@@ -377,36 +377,30 @@ const AppointmentFormDialog = ({
                   </span>
                 )}
               </Label>
-              {isClosed ? (
-                <div className="flex h-10 w-full rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive items-center">
-                  Cerrado este día
-                </div>
-              ) : (
-                <Select
-                  value={form.start_time || undefined}
-                  onValueChange={v => setForm({ ...form, start_time: v })}
-                  disabled={!showTimeSelector || availableSlots.length === 0}
-                >
-                  <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
-                    <SelectValue placeholder={
-                      !showTimeSelector
-                        ? "Selecciona servicio y profesional"
-                        : availableSlots.length === 0
-                        ? "Sin disponibilidad"
-                        : "Seleccionar hora"
-                    } />
-                  </SelectTrigger>
-                  {showTimeSelector && availableSlots.length > 0 && (
-                    <SelectContent>
-                      {availableSlots.map(slot => (
-                        <SelectItem key={slot.time} value={slot.time}>
-                          {slot.time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  )}
-                </Select>
-              )}
+              <Select
+                value={form.start_time || undefined}
+                onValueChange={v => setForm({ ...form, start_time: v })}
+                disabled={!showTimeSelector || availableSlots.length === 0}
+              >
+                <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
+                  <SelectValue placeholder={
+                    !showTimeSelector
+                      ? "Selecciona servicio y profesional"
+                      : availableSlots.length === 0
+                      ? "Sin disponibilidad"
+                      : "Seleccionar hora"
+                  } />
+                </SelectTrigger>
+                {showTimeSelector && availableSlots.length > 0 && (
+                  <SelectContent>
+                    {availableSlots.map(slot => (
+                      <SelectItem key={slot.time} value={slot.time}>
+                        {slot.time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                )}
+              </Select>
             </div>
           </div>
 
