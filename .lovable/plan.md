@@ -1,122 +1,24 @@
+# Plan: Horario unificado por defecto para todos los usuarios
 
-# Plan de Optimizacion del Proyecto - Salon de Belleza
+## Problema
 
-## Estado actual del proyecto
+Cuando un profesional tiene horario configurado solo para algunos días (ej. PILI no tiene domingos), al intentar agendar una cita ese día aparece "Cerrado este día" y no se puede crear la cita. Esto bloquea a los usuarios sin razón clara.
 
-El proyecto esta bien construido con una arquitectura limpia: autenticacion, rutas protegidas, sidebar responsiva, y paginas para gestionar clientes, servicios, profesionales, citas y calendario. La base de datos tiene RLS correctamente configurado.
+## Solución
 
-## Problemas detectados y mejoras propuestas
+Aplicar un **horario por defecto único de 09:00 a 21:00 para todos los profesionales y todos los días de la semana**, ignorando la configuración individual de `working_hours`. Así el software funciona igual para todos los usuarios sin excepciones.
 
-### 1. Errores de manejo de datos (Prioridad alta)
+## Cambios
 
-**Problema**: No se manejan errores en las llamadas a la base de datos en varias paginas. Si falla una consulta, la app se queda sin feedback.
+**Archivo: `src/components/appointments/AppointmentFormDialog.tsx`**
 
-- **Clients.tsx**: `fetchClients`, `handleSubmit` y `handleDelete` no tienen try/catch ni feedback de error
-- **Services.tsx**: Mismo problema en todas las operaciones
-- **Professionals.tsx**: Mismo problema
-- **Appointments.tsx**: `fetchAppointments` sin manejo de errores
+1. Reemplazar la función `getWorkingHours()` para que siempre devuelva `{ start: "09:00", end: "21:00" }` sin consultar `working_hours` ni el día de la semana.
+2. Eliminar la lógica de "isClosed" y el bloque visual rojo de "Cerrado este día" (ya no será necesario).
+3. Las franjas horarias seguirán generándose cada 15 minutos entre 09:00 y 21:00, respetando la duración del servicio y los solapamientos con citas existentes (esa lógica se mantiene intacta).
 
-**Solucion**: Envolver todas las operaciones de base de datos en try/catch con toast de error para el usuario.
+## Resultado
 
----
-
-### 2. Optimizacion de rendimiento - React Query (Prioridad alta)
-
-**Problema**: Todas las paginas usan `useState` + `useEffect` + funciones `fetch` manuales para cargar datos. Esto causa:
-- Re-fetches innecesarios al navegar entre paginas
-- Sin cache de datos
-- Sin estados de loading/error automaticos
-- El usuario ya tiene `@tanstack/react-query` instalado pero no se usa en ninguna pagina
-
-**Solucion**: Migrar las consultas principales a React Query con `useQuery` para:
-- Cache automatico (datos se mantienen al navegar entre paginas)
-- Re-fetch inteligente solo cuando es necesario
-- Estados de loading y error automaticos
-- La app se sentira mucho mas rapida al no recargar datos cada vez
-
-Paginas a migrar: Dashboard, Clients, Services, Professionals, Appointments, Calendar.
-
----
-
-### 3. Codigo duplicado en Calendar.tsx (Prioridad media)
-
-**Problema**: La funcion `getOverlappingGroups` esta definida identica 2 veces dentro del mismo archivo (una en la vista semanal y otra en la vista diaria).
-
-**Solucion**: Extraerla como funcion utilitaria una sola vez fuera del render.
-
----
-
-### 4. Optimizacion del Dashboard (Prioridad media)
-
-**Problema**: El Dashboard hace multiples queries por separado y recalcula `getAppointmentStatus` en cada render para el resumen, lo cual se ejecuta innecesariamente.
-
-**Solucion**: Usar `useMemo` para los calculos derivados como el resumen de citas completadas/pendientes.
-
----
-
-### 5. Appointments.tsx sin paginacion (Prioridad media)
-
-**Problema**: La pagina de citas carga TODAS las citas sin limite. Con el tiempo, esto sera cada vez mas lento.
-
-**Solucion**: Limitar a las citas de los ultimos 30 dias por defecto, o implementar paginacion basica.
-
----
-
-### 6. Tipado seguro (Prioridad baja)
-
-**Problema**: En `Professionals.tsx` y `Appointments.tsx` se usa `any[]` como tipo de estado.
-
-**Solucion**: Definir interfaces tipadas para profesionales y citas, mejorando la mantenibilidad.
-
----
-
-## Detalles tecnicos de la implementacion
-
-### React Query - Estructura de hooks personalizados
-
-Se crearan hooks reutilizables en `src/hooks/`:
-
-- `useClients()` - Consulta y cache de clientes
-- `useServices()` - Consulta y cache de servicios  
-- `useProfessionals()` - Consulta y cache de profesionales
-- `useAppointments(filters)` - Consulta con filtros de fecha
-- `useDashboardStats()` - Stats del dashboard
-
-Cada hook encapsulara la logica de `useQuery` con las keys de cache apropiadas y funciones de invalidacion para cuando se crean/editan/eliminan registros.
-
-### Manejo de errores
-
-Patron uniforme en todas las operaciones de escritura:
-
-```text
-try {
-  await operacion de base de datos
-  toast.success("Mensaje de exito")
-  invalidar cache de React Query
-} catch (error) {
-  toast.error("Mensaje de error descriptivo")
-}
-```
-
-### Archivos a crear
-- `src/hooks/useClients.ts`
-- `src/hooks/useServices.ts`
-- `src/hooks/useProfessionals.ts`
-- `src/hooks/useAppointments.ts`
-
-### Archivos a modificar
-- `src/pages/Dashboard.tsx` - Migrar a React Query + useMemo
-- `src/pages/Clients.tsx` - Migrar a React Query + error handling
-- `src/pages/Services.tsx` - Migrar a React Query + error handling
-- `src/pages/Professionals.tsx` - Migrar a React Query + tipado + error handling
-- `src/pages/Appointments.tsx` - Migrar a React Query + tipado + limitar citas + error handling
-- `src/pages/Calendar.tsx` - Migrar a React Query + extraer funcion duplicada
-- `src/components/appointments/AppointmentFormDialog.tsx` - Error handling mejorado
-
-## Resultado esperado
-
-- La app cargara datos de forma instantanea al navegar entre paginas (cache)
-- Errores de red o base de datos mostraran mensajes claros al usuario
-- El codigo sera mas limpio, mantenible y con menos duplicacion
-- La pagina de citas no se degradara con el tiempo
-- Todo el tipado sera seguro, evitando bugs en produccion
+- Cualquier usuario, en cualquier día de la semana, puede agendar citas entre 09:00 y 21:00.
+- Ya no aparece nunca el mensaje "Cerrado este día".
+- Sigue funcionando el bloqueo de solapamiento de citas (no se pueden crear dos citas que choquen).
+- El comportamiento es idéntico para todos los profesionales y todas las cuentas.

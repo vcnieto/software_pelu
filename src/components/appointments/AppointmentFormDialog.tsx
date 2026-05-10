@@ -94,24 +94,8 @@ const AppointmentFormDialog = ({
     setExistingAppointments(data || []);
   };
 
-  // Get working hours for the selected professional and date
-  const getWorkingHours = () => {
-    if (!form.professional_id || !form.date) return null;
-    const professional = professionals.find(p => String(p.id) === form.professional_id);
-    
-    const selectedDate = new Date(form.date + "T12:00:00");
-    const dayOfWeek = selectedDate.getDay();
-    
-    // If professional has no working_hours configured (empty or null), 
-    // return default hours so they're not marked as "closed"
-    const wh = professional?.working_hours as Record<string, any> | null;
-    if (!wh || Object.keys(wh).length === 0) {
-      return { start: "09:00", end: "20:00" }; // Default working hours
-    }
-    
-    const dayHours = wh[String(dayOfWeek)];
-    return dayHours || null; // null means explicitly closed for this day
-  };
+  // Horario unificado por defecto para todos los profesionales y todos los días.
+  const getWorkingHours = () => ({ start: "09:00", end: "21:00" });
 
   // Generate available time slots
   const timeSlots = useMemo((): TimeSlot[] => {
