@@ -221,7 +221,6 @@ const AppointmentFormDialog = ({
   const availableSlots = filteredSlots.length > 0 ? filteredSlots : timeSlots;
   const showTimeSelector = form.professional_id && form.service_id && form.date;
   const workingHours = getWorkingHours();
-  const isClosed = form.professional_id && form.date && !workingHours;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
