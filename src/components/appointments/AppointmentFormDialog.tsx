@@ -94,24 +94,8 @@ const AppointmentFormDialog = ({
     setExistingAppointments(data || []);
   };
 
-  // Get working hours for the selected professional and date
-  const getWorkingHours = () => {
-    if (!form.professional_id || !form.date) return null;
-    const professional = professionals.find(p => String(p.id) === form.professional_id);
-    
-    const selectedDate = new Date(form.date + "T12:00:00");
-    const dayOfWeek = selectedDate.getDay();
-    
-    // If professional has no working_hours configured (empty or null), 
-    // return default hours so they're not marked as "closed"
-    const wh = professional?.working_hours as Record<string, any> | null;
-    if (!wh || Object.keys(wh).length === 0) {
-      return { start: "09:00", end: "20:00" }; // Default working hours
-    }
-    
-    const dayHours = wh[String(dayOfWeek)];
-    return dayHours || null; // null means explicitly closed for this day
-  };
+  // Horario unificado por defecto para todos los profesionales y todos los días.
+  const getWorkingHours = () => ({ start: "09:00", end: "21:00" });
 
   // Generate available time slots
   const timeSlots = useMemo((): TimeSlot[] => {
@@ -237,7 +221,6 @@ const AppointmentFormDialog = ({
   const availableSlots = filteredSlots.length > 0 ? filteredSlots : timeSlots;
   const showTimeSelector = form.professional_id && form.service_id && form.date;
   const workingHours = getWorkingHours();
-  const isClosed = form.professional_id && form.date && !workingHours;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -394,36 +377,30 @@ const AppointmentFormDialog = ({
                   </span>
                 )}
               </Label>
-              {isClosed ? (
-                <div className="flex h-10 w-full rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive items-center">
-                  Cerrado este día
-                </div>
-              ) : (
-                <Select
-                  value={form.start_time || undefined}
-                  onValueChange={v => setForm({ ...form, start_time: v })}
-                  disabled={!showTimeSelector || availableSlots.length === 0}
-                >
-                  <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
-                    <SelectValue placeholder={
-                      !showTimeSelector
-                        ? "Selecciona servicio y profesional"
-                        : availableSlots.length === 0
-                        ? "Sin disponibilidad"
-                        : "Seleccionar hora"
-                    } />
-                  </SelectTrigger>
-                  {showTimeSelector && availableSlots.length > 0 && (
-                    <SelectContent>
-                      {availableSlots.map(slot => (
-                        <SelectItem key={slot.time} value={slot.time}>
-                          {slot.time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  )}
-                </Select>
-              )}
+              <Select
+                value={form.start_time || undefined}
+                onValueChange={v => setForm({ ...form, start_time: v })}
+                disabled={!showTimeSelector || availableSlots.length === 0}
+              >
+                <SelectTrigger className="focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/40">
+                  <SelectValue placeholder={
+                    !showTimeSelector
+                      ? "Selecciona servicio y profesional"
+                      : availableSlots.length === 0
+                      ? "Sin disponibilidad"
+                      : "Seleccionar hora"
+                  } />
+                </SelectTrigger>
+                {showTimeSelector && availableSlots.length > 0 && (
+                  <SelectContent>
+                    {availableSlots.map(slot => (
+                      <SelectItem key={slot.time} value={slot.time}>
+                        {slot.time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                )}
+              </Select>
             </div>
           </div>
 
